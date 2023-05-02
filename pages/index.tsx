@@ -2,9 +2,9 @@ import type { NextPage } from "next";
 import Link from "next/link";
 import { Col, Form, Nav, Row, Table } from "react-bootstrap";
 
-import Layout from "@/components/Layout";
-import Panel from "@/components/Panel";
-import TableTaskItem from "@/components/TableTaskItem";
+import Layout from "components/Layout";
+import Panel from "components/Panel";
+import TableTaskItem from "components/TableTaskItem";
 import { dashboardData, cropsData, tasksData } from "@/data/index";
 
 const Root: NextPage = () => {
@@ -41,17 +41,19 @@ const Root: NextPage = () => {
               <thead>
                 <tr>
                   <th>Varieties</th>
-                  <th>Qty</th>
+                  <th>Quantity</th>
+                  <th>Remaining days</th>
                 </tr>
               </thead>
               <tbody>
                 {cropsData &&
-                  cropsData.map(({ id, varieties, qty }) => (
+                  cropsData.map(({ id, varieties, qty, day }) => (
                     <tr key={id}>
                       <td>
                         <Link href={`/crops/${id}`}>{varieties}</Link>
                       </td>
                       <td>{qty}</td>
+                      <td>{day} days</td>
                     </tr>
                   ))}
               </tbody>

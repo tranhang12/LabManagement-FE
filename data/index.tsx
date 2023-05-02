@@ -6,16 +6,17 @@ import {
   FaSeedling,
   FaClipboard,
   FaUser,
+  FaTree
 } from "react-icons/fa";
-
+import ScienceIcon from '@mui/icons-material/Science';
 const dashboardData = [
   {
-    name: "2 Areas",
+    name: "3 Areas",
     route: "/areas",
     icon: <FaGripHorizontal className="me-3" />,
   },
   {
-    name: "1 Varieties",
+    name: "2 Varieties",
     route: "/crops",
     icon: <FaLeaf className="me-3" />,
   },
@@ -29,79 +30,117 @@ const dashboardData = [
 const cropsData = [
   {
     id: 101,
-    varieties: "Romaine",
-    batchId: "rom-20mar",
-    seedingDate: "20/03/2021",
-    daysSinceSeeding: 177,
-    qty: 126,
+    varieties: "Asparagus plant",
+    batchId: "As-20mar",
+    seedingDate: "01/04/2023",
+    daysSinceSeeding: 21,
+    remain: 7,
+    qty: 50,
     qtyUnit: "Trays",
-    lastWatering: "-",
+    // lastWatering: "-",
+    day: 7,
     seeding: 0,
     growing: 777,
     dumped: 0,
   },
   {
     id: 102,
-    varieties: "Romaine",
-    batchId: "rom-24mar",
-    seedingDate: "24/03/2021",
-    daysSinceSeeding: 173,
-    qty: 777,
+    varieties: "Aloe vera plant",
+    batchId: "Al-24mar",
+    seedingDate: "15/04/2023",
+    daysSinceSeeding: 28,
+    remain: 15,
+    qty: 100,
     qtyUnit: "Pots",
-    lastWatering: "-",
+    // lastWatering: "-",
+    day: 15,
     seeding: 0,
     growing: 2,
     dumped: 0,
   },
 ];
+const cultureData = [
+  {
+    Culture_ID: 1,
+    Plant_ID: "Aloe vera",
+    Medium: "Murashige and Skoog (MS)",
+    Duration_Of_Culture: 28,
+    Duration_Of_Bud_Regeneration: 28,
+    Duration_Of_Multiply_Bud: 28,
+    Duration_Of_Rooting: 28,
+    Temperature_Min: 24.0,
+    Temperature_Max: 25.0,
+    Light_Intensity: "2000-3000",
+    Lighting_Time: "8-10"
+  },
+  {
+    Culture_ID: 2,
+    Plant_ID: "Asparagus officinalis",
+    Medium: "Murashige and Skoog (MS)",
+    Duration_Of_Culture: 28,
+    Duration_Of_Bud_Regeneration: 28,
+    Duration_Of_Multiply_Bud: 28,
+    Duration_Of_Rooting: 56,
+    Temperature_Min: 24.0,
+    Temperature_Max: 25.0,
+    Light_Intensity: "2000-3000",
+    Lighting_Time: "10-12"
+  }
+]
 
 const tasksData = [
   {
-    id: 201,
-    item: "Tempor commodo qui esse magna est culpa.",
-    details:
-      "Excepteur do non reprehenderit consequat eiusmod non nulla. Veniam esse nisi duis magna ex deserunt irure proident. Veniam mollit irure eu dolore quis esse cupidatat labore nulla. Nisi cillum veniam ipsum sunt ad aliqua sit labore. Adipisicing dolor quis eiusmod occaecat. Non velit commodo eu Lorem Lorem cillum deserunt sint dolore. Reprehenderit ipsum consequat minim voluptate fugiat incididunt proident id velit.",
-    dueDate: "22/07/2021",
-    priority: "normal",
-    category: "sanitation",
+  id: 201,
+  item: "Schedule regular cleaning tasks.",
+  details:
+  "Ensure that all areas are cleaned on a regular basis, including floors, countertops, and equipment. Use appropriate cleaning solutions and follow proper procedures to maintain a sanitary environment. Dispose of waste materials properly and restock necessary supplies when needed.",
+  dueDate: "22/07/2021",
+  priority: "normal",
+  category: "sanitation",
   },
   {
-    id: 202,
-    item: "Laborum fugiat ea mollit aute.",
-    details:
-      "Consectetur non labore ut voluptate ullamco eu non nisi nisi dolor elit minim pariatur culpa. Fugiat ex ullamco sint dolore magna sit reprehenderit cillum veniam nisi dolor culpa ea. Aliquip veniam est sit eu in est occaecat nulla ipsum veniam.",
-    dueDate: "22/07/2021",
-    priority: "normal",
-    category: "sanitation",
+  id: 202,
+  item: "Perform equipment maintenance.",
+  details:
+  "Regularly inspect and maintain equipment to ensure it is in good working condition. Replace worn or damaged parts as needed and perform routine maintenance tasks according to the manufacturer's recommendations.",
+  dueDate: "22/07/2021",
+  priority: "normal",
+  category: "sanitation",
   },
   {
-    id: 203,
-    item: "Consequat incididunt sint do veniam velit eiusmod nisi ut aliqua dolor.",
-    details:
-      "Lorem aliqua nisi cillum nisi do consequat dolore minim Lorem ipsum. Fugiat tempor ipsum esse occaecat eiusmod. Fugiat sit pariatur aute voluptate enim aliquip magna. Id laborum labore deserunt exercitation mollit adipisicing do ipsum mollit. Amet proident pariatur in est cillum ex culpa anim mollit commodo cillum officia dolor ullamco.",
-    dueDate: "20/07/2021",
-    priority: "normal",
-    category: "reservoir",
+  id: 203,
+  item: "Monitor water quality in the reservoir.",
+  details:
+  "Regularly test the water quality in the reservoir to ensure it meets required standards. Perform necessary treatments to maintain water quality and monitor for any potential issues or contaminants.",
+  dueDate: "20/07/2021",
+  priority: "normal",
+  category: "reservoir",
   },
   {
-    id: 204,
-    item: "Tempor excepteur qui in qui.",
-    details:
-      "Ut laborum cupidatat magna veniam ipsum exercitation. Quis do ipsum cillum ipsum fugiat ad nisi velit commodo consequat ipsum deserunt. Ad incididunt elit excepteur dolor laborum ex ipsum aliqua occaecat nisi nostrud qui sunt dolor. Labore ex qui non occaecat aliquip adipisicing est aliqua est non velit ullamco Lorem. Nulla deserunt sunt do culpa excepteur sunt tempor irure tempor enim voluptate. Ex et ullamco incididunt cupidatat sunt. Excepteur ullamco veniam adipisicing esse do reprehenderit ullamco.",
-    dueDate: "20/07/2021",
-    priority: "urgent",
-    category: "safety",
+  id: 204,
+  item: "Conduct safety inspections.",
+  details:
+  "Perform regular safety inspections of the facilities and equipment to identify and address any potential hazards. Ensure that all safety protocols are being followed and that employees are properly trained in emergency procedures.",
+  dueDate: "20/07/2021",
+  priority: "urgent",
+  category: "safety",
   },
   {
-    id: 205,
-    item: "Veniam eiusmod dolor veniam excepteur fugiat anim eiusmod minim est proident consequat.",
-    details:
-      "Culpa non laborum laborum veniam excepteur. Minim velit deserunt sunt est. Ipsum irure aliqua nulla cupidatat officia in ad reprehenderit laborum deserunt fugiat esse ad pariatur.",
-    dueDate: "30/03/2021",
-    priority: "normal",
-    category: "general",
+  id: 205,
+  item: "Hold team meetings.",
+  details:
+  "Schedule regular team meetings to discuss ongoing projects, address any concerns, and plan for future tasks. Encourage open communication and collaboration among team members to ensure the smooth operation of the organization.",
+  dueDate: "30/03/2021",
+  priority: "normal",
+  category: "general",
   },
-];
+  ];
+  
+  
+  
+  
+  
+  ;
 
 const navData = [
   {
@@ -130,97 +169,174 @@ const navData = [
     icon: <FaLeaf className="me-3" />,
   },
   {
+    name: "Culture Medium",
+    route: "/cultureMediums",
+    icon: <ScienceIcon className="me-3" />,
+  },
+  {
+    name: "Plant",
+    route: "/plants",
+    icon: <FaTree className="me-3" />,
+  },
+  {
     name: "Tasks",
     route: "/tasks",
     icon: <FaClipboard className="me-3" />,
   },
   {
-    name: "Account",
+    name: "Users",
     route: "/account",
     icon: <FaUser className="me-3" />,
   },
 ];
 
-const reservoirData = [
-  {
-    id: 31,
-    name: "River",
-    createdOn: "20/03/2021",
-    sourceType: "Tap/Well",
-    capacity: 0,
-    usedIn: "Organic Lettuce",
-  },
-  {
-    id: 32,
-    name: "Water Tank",
-    createdOn: "19/07/2021",
-    sourceType: "Water Tank/Cistern",
-    capacity: 2,
-    usedIn: "Organic Chilli",
-  },
-  {
-    id: 33,
-    name: "Something",
-    createdOn: "07/09/2021",
-    sourceType: "Tap/Well",
-    capacity: 1,
-    usedIn: "Organic Spinach",
-  },
-];
-
 const notesData = [
   {
-    id: 41,
-    title: "Nulla eu aliquip veniam ea ea ad incididunt sint.",
-    createdOn: "07/09/2021",
+  id: 41,
+  title: "Implement new software updates.",
+  createdOn: "07/09/2021",
   },
   {
-    id: 42,
-    title:
-      "Ut pariatur elit excepteur est in ad elit velit cillum mollit nostrud sint esse.",
-    createdOn: "07/09/2021",
+  id: 42,
+  title:
+  "Organize team-building activities for better collaboration.",
+  createdOn: "07/09/2021",
   },
   {
-    id: 43,
-    title: "Minim cillum irure non ad eu est voluptate ipsum voluptate.",
-    createdOn: "19/07/2021",
+  id: 43,
+  title: "Develop strategies for improving customer satisfaction.",
+  createdOn: "19/07/2021",
   },
-];
+  ];  
+  ;
 
 const areaData = [
   {
     id: 51,
-    name: "Organic Lettuce",
-    type: "Growing",
+    name: "Lab 01",
+    type: "Tissue culture room",
     size: 1,
-    unit: "Ha",
-    batches: 2,
-    quantity: 779,
-    edit: false,
+    unit: "m2",
+    batches: 20,
+    quantity: 50,
+    edit: true,
   },
   {
     id: 52,
-    name: "Organic Chilli",
-    type: "Seeding",
-    size: 2,
-    unit: "Ha",
+    name: "Lab 02",
+    type: "Tissue culture laboratory",
+    size: 35,
+    unit: "m2",
     batches: 0,
     quantity: 0,
+    edit: true,
+  },
+  {
+    id: 53,
+    name: "Lab 03",
+    type: "Tissue culture room",
+    size: 30,
+    unit: "m2",
+    batches: 2,
+    quantity: 200,
     edit: true,
   },
 ];
 
 const materialData = [
   {
-    id: 61,
-    category: "Seed",
-    name: "Romaine",
-    price: "2€",
-    producedBy: "Kultiva",
-    qty: 1000,
-    additionalNotes: "",
+    id: 1,
+    category: "Fruit",
+    name: "Fruit 1",
+    price: "4€",
+    producedBy: "Farm Fresh",
+    qty: 256,
+    additionalNote: `Các chồi in vitro (3,0 - 4,0 cm) được chuyển lên môi trường ½ MS bổ sung 15 g/l
+    sucrose, 8 g/l agar, 0,5 g/l than hoạt tính và bổ sung kết hợp NAA (0,5 - 2,0 mg/l) để
+    thăm dò khẳ năng tạo rễ và phát triển thành cây con in vitro hoàn chỉnh. `
   },
-];
+  {
+    id: 2,
+    category: "Seed",
+    name: "Seed 2",
+    price: "3€",
+    producedBy: "Kultiva",
+    qty: 725,
+    additionalNote: "Organic"
+  },
+  {
+    id: 3,
+    category: "Vegetable",
+    name: "Vegetable 3",
+    price: "7€",
+    producedBy: "Organic Harvest",
+    qty: 113,
+    additionalNote: ""
+  },
+  {
+    id: 4,
+    category: "Fruit",
+    name: "Fruit 4",
+    price: "8€",
+    producedBy: "Farm Fresh",
+    qty: 342,
+    additionalNote: "Non-GMO"
+  },
+  {
+    id: 5,
+    category: "Seed",
+    name: "Seed 5",
+    price: "1€",
+    producedBy: "Kultiva",
+    qty: 693,
+    additionalNote: ""
+  },
+  {
+    id: 6,
+    category: "Vegetable",
+    name: "Vegetable 6",
+    price: "6€",
+    producedBy: "Organic Harvest",
+    qty: 903,
+    additionalNote: "Organic"
+  },
+  {
+    id: 7,
+    category: "Fruit",
+    name: "Fruit 7",
+    price: "2€",
+    producedBy: "Farm Fresh",
+    qty: 654,
+    additionalNote: "Non-GMO"
+  },
+  {
+    id: 8,
+    category: "Seed",
+    name: "Seed 8",
+    price: "9€",
+    producedBy: "Kultiva",
+    qty: 875,
+    additionalNote: ""
+  },
+  {
+    id: 9,
+    category: "Vegetable",
+    name: "Vegetable 9",
+    price: "5€",
+    producedBy: "Organic Harvest",
+    qty: 14,
+    additionalNote: "Organic"
+  },
+  {
+    id: 10,
+    category: "Fruit",
+    name: "Fruit 10",
+    price: "3€",
+    producedBy: "Farm Fresh",
+    qty: 882,
+    additionalNote: ""
+  }
+  ];
 
 const micropropagationData = [
   {
@@ -233,15 +349,63 @@ const micropropagationData = [
     additionalNotes: "",
   },
 ];
+const users = [
+	{
+		"User_ID" : 19,
+		"User_Name" : "tranhang12",
+		"User_Password" : "$2b$10$2EkuXuv3LCbT06SuwocUuu\/6GVAm1vLN97n7AjmX0ZZlJoRkMeBee",
+		"Full_Name" : "Tran Thi Hang",
+		"Phone_Number" : "09837812498",
+		"Is_Admin" : 1,
+		"email" : "tranhang12@gmail.com"
+	},
+	{
+		"User_ID" : 21,
+		"User_Name" : "tranhang123",
+		"User_Password" : "$2b$10$A3X0QGt1Gt85fxJbXKepLOXmNHEiAKCJSYeP4h1OeIupZ1nXPdi5q",
+		"Full_Name" : "Hang Tran",
+		"Phone_Number" : "0892374892",
+		"Is_Admin" : 0,
+		"email" : "tranhang13@gmail.com"
+	},
+	{
+		"User_ID" : 25,
+		"User_Name" : "caominh25",
+		"User_Password" : "$2b$10$nbupU97fA4BCC.kRG2u35eyCAiALu2AYtw0SVBgZiBd0t89w0Kw9e",
+		"Full_Name" : "Minh Cao",
+		"Phone_Number" : "09238497312",
+		"Is_Admin" : 1,
+		"email" : "tranhang14@gmail.com"
+	},
+	{
+		"User_ID" : 26,
+		"User_Name" : "MinMin123",
+		"User_Password" : "$2b$10$A4dUIqMiVyLZFa3FVgiULeHSDwWxokFSSFkxkTuq8\/l2UCUKjUBUq",
+		"Full_Name" : "Cao Minh",
+		"Phone_Number" : "0834897355",
+		"Is_Admin" : 1,
+		"email" : "tranhang15@gmail.com"
+	},
+	{
+		"User_ID" : 33,
+		"User_Name" : "Minmin12",
+		"User_Password" : "$2b$10$neMgpz4eFAaIiU0jHA.7weFIRGRC\/tF6bUn0tJpI8rSz.Gd8Rt5BG",
+		"Full_Name" : "Dương Ngọc Minh",
+		"Phone_Number" : "098236578124",
+		"Is_Admin" : 0,
+		"email" : "tranhang17@gmail.com"
+	},
 
+]
 export {
   dashboardData,
   cropsData,
   tasksData,
   navData,
-  reservoirData,
   notesData,
   areaData,
   materialData,
-  micropropagationData
+  micropropagationData,
+  users,
+  cultureData
 };

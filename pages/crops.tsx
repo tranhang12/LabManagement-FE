@@ -1,14 +1,34 @@
+
+
+import {
+  TableContainer,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  Paper,
+  TableSortLabel,
+} from "@mui/material";
+import { styled } from "@mui/system";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import Pagination from "@mui/lab/Pagination";
+import useSortData from "../src/hooks/useSortData";
+import usePagination from "../src/hooks/usePagination";
+
+
 import { useState } from "react";
 import type { NextPage } from "next";
 import Link from "next/link";
-import { Card, Col, Form, Row, Tab, Table, Tabs } from "react-bootstrap";
+import { Card, Col, Form, Row, Tab, Tabs } from "react-bootstrap";
 import { FaEdit, FaPlus } from "react-icons/fa";
 
 import ButtonIcon from "../components/ButtonIcon";
 import ModalContainer from "../components/ModalContainer";
 import Layout from "../components/Layout";
 import { cropsData } from "../data";
-import useModal from "../hooks/useModal";
+import useModal from "../src/hooks/useModal";
 
 const Crops: NextPage = () => {
   const { modalOpen, showModal, closeModal } = useModal();
@@ -28,6 +48,42 @@ const Crops: NextPage = () => {
     }
   };
 
+  
+  const itemsPerPage = 10;
+
+  const { sortedData, requestSort, sortConfig, handleRequestSort } =
+    useSortData(cropsData);
+  const { paginatedData, totalPages, currentPage, handleChangePage } =
+    usePagination(sortedData, itemsPerPage);
+
+  const [showFullNotes, setShowFullNotes] = useState<Record<number, boolean>>(
+    {}
+  );
+  const handleNotesClick = (id: number) => {
+    setShowFullNotes((prevShowFullNotes) => ({
+      ...prevShowFullNotes,
+      [id]: !prevShowFullNotes[id],
+    }));
+  };
+
+  //css for header
+  const StyledTableHead = styled(TableHead)`
+    background-color: #358a51;
+  `;
+
+  const StyledTableCell = styled(TableCell)`
+    color: white;
+    font-weight: bold;
+    text-align: center;
+  `;
+//css for setting width of id table
+const StyledTableCellWidth = styled(TableCell)`
+  width: 5px; 
+  color: white;
+    font-weight: bold;
+    text-align: center;
+`;
+
   return (
     <Layout>
       <Row>
@@ -45,13 +101,15 @@ const Crops: NextPage = () => {
                 onClick={showModal}
                 variant="primary"
               />
-              <Table responsive className="my-4">
+              {/* <Table responsive className="my-4">
                 <thead>
                   <tr>
                     <th>Crop Variety</th>
                     <th>Batch ID</th>
-                    <th>Days Since Seeding</th>
-                    <th>Initial Quantity</th>
+                    <th>Start Date</th>
+                    <th>Planned Time</th>
+                    <th>Remaining days</th>
+                    <th>Quantity</th>
                     <th>Status</th>
                     <th />
                   </tr>
@@ -64,6 +122,7 @@ const Crops: NextPage = () => {
                         varieties,
                         batchId,
                         daysSinceSeeding,
+                        remain,
                         qty,
                         seeding,
                         growing,
@@ -87,10 +146,130 @@ const Crops: NextPage = () => {
                       )
                     )}
                 </tbody>
-              </Table>
+              </Table> */}
+                    <TableContainer component={Paper} className="my-4">
+        <Table>
+          <StyledTableHead>
+            <TableRow>
+              <StyledTableCellWidth>
+                <TableSortLabel
+                  active={sortConfig.key === "index"}
+                  direction={sortConfig.direction}
+                  onClick={() => handleRequestSort("index")}
+                >
+                  #
+                </TableSortLabel>
+              </StyledTableCellWidth>
+              <StyledTableCell>
+                <TableSortLabel
+                  active={sortConfig.key === "Category"}
+                  direction={sortConfig.direction}
+                  onClick={() => handleRequestSort("Category")}
+                >
+                  Crop Variety
+                </TableSortLabel>
+              </StyledTableCell>
+              <StyledTableCell onClick={() => handleRequestSort("Name")}>
+                <TableSortLabel
+                  active={sortConfig.key === "Name"}
+                  direction={sortConfig.direction}
+                  onClick={() => handleRequestSort("Name")}
+                >
+                  Batch ID
+                </TableSortLabel>
+              </StyledTableCell>
+              <StyledTableCell onClick={() => handleRequestSort("Price")}>
+                <TableSortLabel
+                  active={sortConfig.key === "Price"}
+                  direction={sortConfig.direction}
+                  onClick={() => handleRequestSort("Price")}
+                >
+                  Start Date
+                </TableSortLabel>
+              </StyledTableCell>
+              <StyledTableCell onClick={() => handleRequestSort("Produced_By")}>
+                <TableSortLabel
+                  active={sortConfig.key === "Produced_By"}
+                  direction={sortConfig.direction}
+                  onClick={() => handleRequestSort("Produced_By")}
+                >
+                  Planned Time
+                </TableSortLabel>
+              </StyledTableCell>
+              <StyledTableCell onClick={() => handleRequestSort("Quantity")}>
+                <TableSortLabel
+                  active={sortConfig.key === "Quantity"}
+                  direction={sortConfig.direction}
+                  onClick={() => handleRequestSort("Quantity")}
+                >
+                  Remaining days
+                </TableSortLabel>
+              </StyledTableCell>
+              <StyledTableCell onClick={() => handleRequestSort("Quantity")}>
+                <TableSortLabel
+                  active={sortConfig.key === "Quantity"}
+                  direction={sortConfig.direction}
+                  onClick={() => handleRequestSort("Quantity")}
+                >
+                  Quantity
+                </TableSortLabel>
+              </StyledTableCell>
+              <StyledTableCell>Actions</StyledTableCell>
+            </TableRow>
+          </StyledTableHead>
+          <TableBody>
+            {paginatedData &&
+              paginatedData.map(
+                (
+                  {
+                    id,
+                        varieties,
+                        batchId,
+                        daysSinceSeeding,
+                        seedingDate,
+                        remain,
+                        qty,
+                        seeding,
+                        growing,
+                        dumped,
+                  },
+                  index
+                ) => (
+                  
+                  <TableRow key={id}>
+                    <TableCell>{index + 1}</TableCell>
+                    <TableCell><Link href={`/crops/${id}`}>{varieties}</Link></TableCell>
+                    <TableCell>{batchId}</TableCell>
+                    <TableCell>{seedingDate}</TableCell>
+                    <TableCell>{daysSinceSeeding} Days</TableCell>
+                    <TableCell>{remain} Days</TableCell>
+                    <TableCell>{qty} Pots</TableCell>
+                    <TableCell>
+                      <EditIcon
+                        onClick={showModal}
+                        className="show-pointer text-secondary icon-bordered icon-spacing"
+                      />
+                      <DeleteIcon
+                        onClick={showModal}
+                        className="show-pointer text-danger icon-bordered"
+                      />
+                    </TableCell>
+                  </TableRow>
+                )
+              )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      <div className="d-flex justify-content-center mt-4">
+        <Pagination
+          count={totalPages}
+          page={currentPage}
+          onChange={handleChangePage}
+        />
+      </div>
             </Tab>
             <Tab eventKey="archives" title="Archives">
-              <Table responsive className="my-4">
+              {/* <Table responsive className="my-4">
                 <thead>
                   <tr>
                     <th>Crop Variety</th>
@@ -106,7 +285,7 @@ const Crops: NextPage = () => {
                     <td colSpan={6}>No crops available.</td>
                   </tr>
                 </tbody>
-              </Table>
+              </Table> */}
             </Tab>
           </Tabs>
         </Col>

@@ -16,7 +16,7 @@ const SearchInput: FC<SearchInputProps> = ({
   className,
 }) => {
   return (
-    <Form.Control
+      <Form.Control
       type="text"
       className={className}
       placeholder={placeholder}

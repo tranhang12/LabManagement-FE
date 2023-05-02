@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState,useEffect } from "react";
 import type { NextPage } from "next";
 import { Col, Form, InputGroup, Row } from "react-bootstrap";
-import { FaPlus } from "react-icons/fa";
+import {FaPlus} from "react-icons/fa";
 import {
   TableContainer,
   Table,
@@ -18,32 +18,31 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import Pagination from "@mui/lab/Pagination";
 import useSortData from "../src/hooks/useSortData";
 import usePagination from "../src/hooks/usePagination";
+import apiClient from "@/services/apiClient";
 
 import ButtonIcon from "../components/ButtonIcon";
 import ModalContainer from "../components/ModalContainer";
 import Layout from "../components/Layout";
-import apiClient from "@/services/apiClient";
+import { materialData } from "../data";
 import useModal from "../src/hooks/useModal";
 
-const Material: NextPage = () => {
+const CultureMedium: NextPage = () => {
   const { modalOpen, showModal, closeModal } = useModal();
-  const [materialCategory, setMaterialCategory] = useState("");
+  const [materialType, setMaterialType] = useState("");
   const [materialName, setMaterialName] = useState("");
   const [quantity, setQuantity] = useState("");
-  const [Produced_By, setProduced_By] = useState("");
+  const [plantType, setPlantType] = useState("");
+  const [producedBy, setProducedBy] = useState("");
   const [priceUnit, setPriceUnit] = useState("");
   const [expirationDate, setExpirationDate] = useState("");
   const [notes, setNotes] = useState("");
   const [isError, setIsError] = useState(false);
-
-  //fetch data
-  const [materials, setMaterials] = useState([]);
-
+  const [cultureMedium, setCultureMedium] = useState([]);
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await apiClient.get("/material");
-        setMaterials(response.data.result);
+        const response = await apiClient.get("/cultureMedium");
+        setCultureMedium(response.data.result);
         console.log(response.data.result);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -53,7 +52,7 @@ const Material: NextPage = () => {
     fetchData();
   }, []);
   // add new material
-  const addMaterial = () => {
+  const addMedium = () => {
     if (!materialName) {
       setIsError(true);
     } else {
@@ -65,57 +64,58 @@ const Material: NextPage = () => {
   const itemsPerPage = 10;
 
   const { sortedData, requestSort, sortConfig, handleRequestSort } =
-    useSortData(materials);
+    useSortData(cultureMedium);
   const { paginatedData, totalPages, currentPage, handleChangePage } =
     usePagination(sortedData, itemsPerPage);
 
-  const [showFullNotes, setShowFullNotes] = useState<Record<number, boolean>>(
-    {}
-  );
-  const handleNotesClick = (id: number) => {
-    setShowFullNotes((prevShowFullNotes) => ({
-      ...prevShowFullNotes,
-      [id]: !prevShowFullNotes[id],
-    }));
-  };
-
-  // css for header
+    const [showFullNotes, setShowFullNotes] = useState<Record<number, boolean>>({});
+    const handleNotesClick = (id: number) => {
+      setShowFullNotes((prevShowFullNotes) => ({
+        ...prevShowFullNotes,
+        [id]: !prevShowFullNotes[id],
+      }));
+    };
+    
+    // css for header
   const StyledTableHead = styled(TableHead)`
     background-color: #358a51;
   `;
 
-  const StyledTableCell = styled(TableCell)`
-    color: white;
-    font-weight: bold;
-    text-align: center;
-  `;
- // css for note table
-  const NotesTableCell = styled(TableCell)<{ showFull?: boolean }>`
-    max-width: 100px;
-    white-space: ${({ showFull }) => (showFull ? "normal" : "nowrap")};
-    overflow: hidden;
-    text-overflow: ellipsis;
-  `;
-//css for setting width of id table
-const StyledTableCellWidth = styled(TableCell)`
-  width: 5px; 
+  const StyledTableCellMediumName = styled(TableCell)`
   color: white;
-    font-weight: bold;
-    text-align: center;
+  font-weight: bold;
+  text-align: center;
+  width: 250px;
 `;
 
+const StyledTableCellMediumDescription = styled(TableCell)`
+  color: white;
+  font-weight: bold;
+  text-align: center;
+  width: 350px;
+`;
+const StyledTableCellID = styled(TableCell)`
+color: white;
+  text-align: center;
+  width: 50px; // Tùy chỉnh chiều rộng của cột ở đây
+`;
+const StyledTableCellBodyID = styled(TableCell)`
+  color: black;
+  text-align: center;
+  width: 50px;
+`;
 
   return (
     <Layout>
       <Row>
         <Col>
-          <h3 className="pb-3">Materials</h3>
+          <h3 className="pb-3">Culture Medium</h3>
         </Col>
       </Row>
       <Row>
         <Col>
           <ButtonIcon
-            label="Add Material"
+            label="Add Culture Medium"
             icon={<FaPlus className="me-2" />}
             onClick={showModal}
             variant="primary"
@@ -123,131 +123,38 @@ const StyledTableCellWidth = styled(TableCell)`
         </Col>
       </Row>
       <TableContainer component={Paper} className="my-4">
-        <Table>
-          <StyledTableHead>
-            <TableRow>
-              <StyledTableCellWidth>
-                <TableSortLabel
-                  active={sortConfig.key === "index"}
-                  direction={sortConfig.direction}
-                  onClick={() => handleRequestSort("index")}
-                >
-                  ID
-                </TableSortLabel>
-              </StyledTableCellWidth>
-              <StyledTableCell>
-                <TableSortLabel
-                  active={sortConfig.key === "Category"}
-                  direction={sortConfig.direction}
-                  onClick={() => handleRequestSort("Category")}
-                >
-                  Category
-                </TableSortLabel>
-              </StyledTableCell>
-              <StyledTableCell onClick={() => handleRequestSort("Name")}>
-                <TableSortLabel
-                  active={sortConfig.key === "Name"}
-                  direction={sortConfig.direction}
-                  onClick={() => handleRequestSort("Name")}
-                >
-                  Name
-                </TableSortLabel>
-              </StyledTableCell>
-              <StyledTableCell onClick={() => handleRequestSort("Price")}>
-                <TableSortLabel
-                  active={sortConfig.key === "Price"}
-                  direction={sortConfig.direction}
-                  onClick={() => handleRequestSort("Price")}
-                >
-                  Price
-                </TableSortLabel>
-              </StyledTableCell>
-              <StyledTableCell onClick={() => handleRequestSort("Produced_By")}>
-                <TableSortLabel
-                  active={sortConfig.key === "Produced_By"}
-                  direction={sortConfig.direction}
-                  onClick={() => handleRequestSort("Produced_By")}
-                >
-                  Produced By
-                </TableSortLabel>
-              </StyledTableCell>
-              <StyledTableCell onClick={() => handleRequestSort("Quantity")}>
-                <TableSortLabel
-                  active={sortConfig.key === "Quantity"}
-                  direction={sortConfig.direction}
-                  onClick={() => handleRequestSort("Quantity")}
-                >
-                  Quantity
-                </TableSortLabel>
-              </StyledTableCell>
-              <StyledTableCell onClick={() => handleRequestSort("Unit")}>
-                <TableSortLabel
-                  active={sortConfig.key === "Unit"}
-                  direction={sortConfig.direction}
-                  onClick={() => handleRequestSort("Unit")}
-                >
-                  Unit
-                </TableSortLabel>
-              </StyledTableCell>
-              <StyledTableCell
-                onClick={() => handleRequestSort("expiration_date")}
-              >
-                <TableSortLabel
-                  active={sortConfig.key === "expiration_date"}
-                  direction={sortConfig.direction}
-                  onClick={() => handleRequestSort("expiration_date")}
-                >
-                  Expiration date
-                </TableSortLabel>
-              </StyledTableCell>
-              <StyledTableCell
-                onClick={() => handleRequestSort("Additional_Notes")}
-              >
-                <TableSortLabel
-                  active={sortConfig.key === "Additional_Notes"}
-                  direction={sortConfig.direction}
-                  onClick={() => handleRequestSort("Additional_Notes")}
-                >
-                  Additional Notes
-                </TableSortLabel>
-              </StyledTableCell>
-              <StyledTableCell>Actions</StyledTableCell>
-            </TableRow>
-          </StyledTableHead>
-          <TableBody>
-            {paginatedData &&
-              paginatedData.map(
-                (
-                  {
-                    id,
-                    Category,
-                    Name,
-                    Price,
-                    Produced_By,
-                    Quantity,
-                    Unit,
-                    expiration_date,
-                    Additional_Notes,
-                  },
-                  index
-                ) => (
-                  
-                  <TableRow key={id}>
-                    <TableCell>{index + 1}</TableCell>
-                    <TableCell>{Category}</TableCell>
-                    <TableCell>{Name}</TableCell>
-                    <TableCell>${Price}</TableCell>
-                    <TableCell>{Produced_By}</TableCell>
-                    <TableCell>{Quantity}</TableCell>
-                    <TableCell>{Unit}</TableCell>
-                    <TableCell>{new Date(expiration_date).toLocaleDateString()}</TableCell>
-                    <NotesTableCell
-                      showFull={showFullNotes[id]}
-                      onClick={() => handleNotesClick(id)}
-                    >
-                      {Additional_Notes}
-                    </NotesTableCell>
-                    <TableCell>
+      <Table>
+        <StyledTableHead>
+          <TableRow>
+          <StyledTableCellID>
+      #
+    </StyledTableCellID>
+            <StyledTableCellMediumName>
+              Culture Medium Name
+            </StyledTableCellMediumName>
+            <StyledTableCellMediumDescription>
+              Culture Medium Description
+            </StyledTableCellMediumDescription>
+            <StyledTableCellMediumDescription>
+              Actions
+            </StyledTableCellMediumDescription>
+          </TableRow>
+        </StyledTableHead>
+        <TableBody>
+          {paginatedData &&
+            paginatedData.map((
+              {
+                Culture_Medium_ID,
+                Culture_Medium_Name,
+                Culture_Medium_Description
+              },
+              index
+            ) => (
+              <TableRow key={Culture_Medium_ID}>
+                <StyledTableCellBodyID>{index + 1}</StyledTableCellBodyID>
+                <TableCell>{Culture_Medium_Name}</TableCell>
+                <TableCell>{Culture_Medium_Description}</TableCell>
+                <TableCell  align="center">
                       <EditIcon
                         onClick={showModal}
                         className="show-pointer text-secondary icon-bordered icon-spacing"
@@ -257,11 +164,10 @@ const StyledTableCellWidth = styled(TableCell)`
                         className="show-pointer text-danger icon-bordered"
                       />
                     </TableCell>
-                  </TableRow>
-                )
-              )}
-          </TableBody>
-        </Table>
+              </TableRow>
+            ))}
+        </TableBody>
+      </Table>
       </TableContainer>
       <div className="d-flex justify-content-center mt-4">
         <Pagination
@@ -275,18 +181,17 @@ const StyledTableCellWidth = styled(TableCell)`
         title="Add Material to Inventory"
         isShow={modalOpen}
         handleCloseModal={closeModal}
-        handleSubmitModal={addMaterial}
+        handleSubmitModal={addMedium}
       >
         <>
           <small className="text-muted">
-          Materials can include buffering agents, supplements, antibiotics and antifungals, gelatin and agar, cell culture vessels, and equipment such as a laminar flow hood, CO2 incubator, centrifuge, and cell counter.
+            Material is a consumable product using in your farm such as seeds,
+            growing medium, fertilizer, pesticide, and so on.
           </small>
           <Form className="mt-3">
             <Form.Group className="mb-3">
               <Form.Label>Choose type of material</Form.Label>
-              <Form.Select
-                onChange={(e) => setMaterialCategory(e.target.value)}
-              >
+              <Form.Select onChange={(e) => setMaterialType(e.target.value)}>
                 <option value="1">Seed</option>
                 <option value="2">Growing Medium</option>
                 <option value="3">Agrochemical</option>
@@ -311,18 +216,18 @@ const StyledTableCellWidth = styled(TableCell)`
             </Form.Group>
             <Form.Group className="mb-3">
               <Row>
-                {/* <Col>
+                <Col>
                   <Form.Label>Plant Type</Form.Label>
                   <Form.Control
                     type="text"
                     onChange={(e) => setPlantType(e.target.value)}
                   />
-                </Col> */}
+                </Col>
                 <Col>
                   <Form.Label>Produced by</Form.Label>
                   <Form.Control
                     type="text"
-                    onChange={(e) => setProduced_By(e.target.value)}
+                    onChange={(e) => setProducedBy(e.target.value)}
                   />
                   {isError && (
                     <Form.Text className="text-danger">
@@ -361,7 +266,7 @@ const StyledTableCellWidth = styled(TableCell)`
                 <Col>
                   <Form.Label>Unit</Form.Label>
                   <Form.Select
-                    onChange={(e) => setMaterialCategory(e.target.value)}
+                    onChange={(e) => setMaterialType(e.target.value)}
                   >
                     <option value="1">Seeds</option>
                     <option value="2">Packets</option>
@@ -420,4 +325,4 @@ const StyledTableCellWidth = styled(TableCell)`
   );
 };
 
-export default Material;
+export default CultureMedium;

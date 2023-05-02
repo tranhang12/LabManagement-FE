@@ -4,7 +4,7 @@ import React from "react";
 import { Container, Col, Nav, Navbar, Row } from "react-bootstrap";
 import { FaPowerOff } from "react-icons/fa";
 
-import Footer from "@/components/Footer";
+import Footer from "components/Footer";
 import Sidebar from "./Sidebar";
 import { navData } from "../data";
 
@@ -25,9 +25,7 @@ const Layout = ({ children }: iLayout) => {
           </Navbar.Brand>
           <Navbar.Toggle />
           <Navbar.Collapse>
-            {/* <Nav className="d-none d-md-block">
-              <Nav.Link>Demo Farm</Nav.Link>
-            </Nav> */}
+
             <Nav className="d-md-none">
               {navData &&
                 navData.map(({ name, route, icon }) => (
@@ -46,7 +44,7 @@ const Layout = ({ children }: iLayout) => {
               <Nav.Link>
                 <div className="d-flex align-items-center">
                   <FaPowerOff className="me-3" />
-                  <Link href="/auth/signin">
+                  <Link href="/auth/login">
                     <span className="text-decoration-none">Sign Out</span>
                   </Link>
                 </div>

@@ -5,7 +5,7 @@ interface iButtonIcon {
   icon: JSX.Element;
   type?: "button" | "submit" | "reset";
   variant: string;
-  onClick: () => void;
+  onClick?: () => void;
   textColor?: string;
   isBlock?: boolean;
 }
@@ -16,7 +16,7 @@ const ButtonIcon = ({
   type = "button",
   variant,
   onClick,
-  textColor = "text-dark",
+  textColor = "text-light",
   isBlock = false,
 }: iButtonIcon): JSX.Element => (
   <Button

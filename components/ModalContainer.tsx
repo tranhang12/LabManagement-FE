@@ -25,12 +25,13 @@ const ModalContainer = ({
         <Modal.Title>{title}</Modal.Title>
       </Modal.Header>
       <Modal.Body>{children}</Modal.Body>
-      <Modal.Footer>
+      <Modal.Footer className="d-flex justify-content-around">
         <ButtonIcon
           label="Cancel"
           icon={<FaTimes className="me-1" />}
-          variant="light"
+          variant="danger"
           onClick={handleCloseModal}
+          textColor="text-dark"
         />
         <ButtonIcon
           label="Save"

@@ -18,7 +18,7 @@ import { iTableTaskItem } from "../components/TableTaskItem";
 import TableTaskItem from "../components/TableTaskItem";
 import Layout from "../components/Layout";
 import { tasksData } from "../data";
-import useModal from "../hooks/useModal";
+import useModal from "../src/hooks/useModal";
 
 const Tasks: NextPage = () => {
   const { modalOpen, showModal, closeModal } = useModal();

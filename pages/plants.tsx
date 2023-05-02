@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState,useEffect } from "react";
 import type { NextPage } from "next";
 import { Col, Form, InputGroup, Row } from "react-bootstrap";
-import { FaPlus } from "react-icons/fa";
+import {FaPlus} from "react-icons/fa";
 import {
   TableContainer,
   Table,
@@ -18,42 +18,32 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import Pagination from "@mui/lab/Pagination";
 import useSortData from "../src/hooks/useSortData";
 import usePagination from "../src/hooks/usePagination";
-import { cultureData } from "../data";
+import apiClient from "@/services/apiClient";
 
 import ButtonIcon from "../components/ButtonIcon";
 import ModalContainer from "../components/ModalContainer";
 import Layout from "../components/Layout";
-import apiClient from "@/services/apiClient";
+import { materialData } from "../data";
 import useModal from "../src/hooks/useModal";
 
-const Micropropagation: NextPage = () => {
+const Plant: NextPage = () => {
   const { modalOpen, showModal, closeModal } = useModal();
-  const [plant, setPlant] = useState("");
-  const [cultureMedium, setCultureMedium] = useState("");
-  const [culture, setCulture] = useState("");
-  const [budRegeneration, setBudRegeneration] = useState("");
-  const [multiplyBud, setMultiplyBud] = useState("");
-  const [rooting, setRooting] = useState("");
-  const [temperature, setTemperature] = useState("");
-  const [lightIntensity, setLightIntensity] = useState("");
-  const [lightingTime, setLightingTime] = useState("");
+  const [materialType, setMaterialType] = useState("");
+  const [materialName, setMaterialName] = useState("");
+  const [quantity, setQuantity] = useState("");
+  const [plantType, setPlantType] = useState("");
+  const [producedBy, setProducedBy] = useState("");
+  const [priceUnit, setPriceUnit] = useState("");
+  const [expirationDate, setExpirationDate] = useState("");
+  const [notes, setNotes] = useState("");
   const [isError, setIsError] = useState(false);
-
-  //fetch data
-  const [micropropagations, setMicropropagations] = useState([]);
-  const [plants, setPlants] = useState([]);
-  const [cultureMediums, setCultureMediums] = useState([]);
-  
+  const [cultureMedium, setCultureMedium] = useState([]);
   useEffect(() => {
     async function fetchData() {
       try {
-        const responseMaterials = await apiClient.get("/material");
-      const responsePlants = await apiClient.get("/plant");
-      const responseCultures = await apiClient.get("/culture");
-      
-      setMicropropagations(responseMaterials.data.result);
-      setPlants(responsePlants.data.result);
-      setCultureMediums(responseCultures.data.result);
+        const response = await apiClient.get("/plant");
+        setCultureMedium(response.data.result);
+        console.log(response.data.result);
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -62,8 +52,8 @@ const Micropropagation: NextPage = () => {
     fetchData();
   }, []);
   // add new material
-  const addMaterial = () => {
-    if (!culture) {
+  const addMedium = () => {
+    if (!materialName) {
       setIsError(true);
     } else {
       setIsError(false);
@@ -74,57 +64,58 @@ const Micropropagation: NextPage = () => {
   const itemsPerPage = 10;
 
   const { sortedData, requestSort, sortConfig, handleRequestSort } =
-    useSortData(cultureData);
+    useSortData(cultureMedium);
   const { paginatedData, totalPages, currentPage, handleChangePage } =
     usePagination(sortedData, itemsPerPage);
 
-  const [showFullNotes, setShowFullNotes] = useState<Record<number, boolean>>(
-    {}
-  );
-  const handleNotesClick = (id: number) => {
-    setShowFullNotes((prevShowFullNotes) => ({
-      ...prevShowFullNotes,
-      [id]: !prevShowFullNotes[id],
-    }));
-  };
-
-  // css for header
+    const [showFullNotes, setShowFullNotes] = useState<Record<number, boolean>>({});
+    const handleNotesClick = (id: number) => {
+      setShowFullNotes((prevShowFullNotes) => ({
+        ...prevShowFullNotes,
+        [id]: !prevShowFullNotes[id],
+      }));
+    };
+    
+    // css for header
   const StyledTableHead = styled(TableHead)`
     background-color: #358a51;
   `;
 
-  const StyledTableCell = styled(TableCell)`
-    color: white;
-    font-weight: bold;
-    text-align: center;
-  `;
- // css for note table
-  const NotesTableCell = styled(TableCell)<{ showFull?: boolean }>`
-    max-width: 300px;
-    white-space: ${({ showFull }) => (showFull ? "normal" : "nowrap")};
-    overflow: hidden;
-    text-overflow: ellipsis;
-  `;
-//css for setting width of id table
-const StyledTableCellWidth = styled(TableCell)`
-  width: 5px; 
+  const StyledTableCellMediumName = styled(TableCell)`
   color: white;
-    font-weight: bold;
-    text-align: center;
+  font-weight: bold;
+  text-align: center;
+  width: 250px;
 `;
 
+const StyledTableCellMediumDescription = styled(TableCell)`
+  color: white;
+  font-weight: bold;
+  text-align: center;
+  width: 350px;
+`;
+const StyledTableCellID = styled(TableCell)`
+color: white;
+  text-align: center;
+  width: 50px; // Tùy chỉnh chiều rộng của cột ở đây
+`;
+const StyledTableCellBodyID = styled(TableCell)`
+  color: black;
+  text-align: center;
+  width: 50px;
+`;
 
   return (
     <Layout>
       <Row>
         <Col>
-          <h3 className="pb-3">Micropropagation</h3>
+          <h3 className="pb-3">Plant</h3>
         </Col>
       </Row>
       <Row>
         <Col>
           <ButtonIcon
-            label="Add Micropropagation"
+            label="Add Plant"
             icon={<FaPlus className="me-2" />}
             onClick={showModal}
             variant="primary"
@@ -132,53 +123,57 @@ const StyledTableCellWidth = styled(TableCell)`
         </Col>
       </Row>
       <TableContainer component={Paper} className="my-4">
-        <Table>
-        <StyledTableHead>
-  <TableRow>
-  <StyledTableCell>#</StyledTableCell>
+      <Table>
+  <StyledTableHead>
+    <TableRow>
+      <StyledTableCellID>
+        #
+      </StyledTableCellID>
+      <StyledTableCellMediumName>
+        Plant Name
+      </StyledTableCellMediumName>
+      <StyledTableCellMediumDescription>
+        Scientific Name
+      </StyledTableCellMediumDescription>
+      <StyledTableCellMediumDescription>
+        Plant Description
+      </StyledTableCellMediumDescription>
+      <StyledTableCellMediumDescription>
+        Actions
+      </StyledTableCellMediumDescription>
+    </TableRow>
+  </StyledTableHead>
+  <TableBody>
+    {paginatedData &&
+      paginatedData.map((
+        {
+          Plant_ID,
+          Plant_Name,
+          Scientific_Name,
+          Plant_Description
+        },
+        index
+      ) => (
+        <TableRow key={Plant_ID}>
+          <StyledTableCellBodyID>{index + 1}</StyledTableCellBodyID>
+          <TableCell align="center">{Plant_Name}</TableCell>
+          <TableCell align="center">{Scientific_Name}</TableCell>
+          <TableCell align="center">{Plant_Description}</TableCell>
+          <TableCell align="center">
+            <EditIcon
+              onClick={showModal}
+              className="show-pointer text-secondary icon-bordered icon-spacing"
+            />
+            <DeleteIcon
+              onClick={showModal}
+              className="show-pointer text-danger icon-bordered"
+            />
+          </TableCell>
+        </TableRow>
+      ))}
+  </TableBody>
+</Table>
 
-    <StyledTableCell>Plant</StyledTableCell>
-    <StyledTableCell>Culture Medium</StyledTableCell>
-    <StyledTableCell>Culture</StyledTableCell>
-    <StyledTableCell>Bud Regeneration</StyledTableCell>
-    <StyledTableCell>Multiply Bud</StyledTableCell>
-    <StyledTableCell>Rooting</StyledTableCell>
-    <StyledTableCell>Temperature</StyledTableCell>
-    <StyledTableCell>Light Intensity</StyledTableCell>
-    <StyledTableCell>Lighting Time</StyledTableCell>
-    <StyledTableCell>Actions</StyledTableCell>
-  </TableRow>
-</StyledTableHead>
-<TableBody>
-  {paginatedData &&
-    paginatedData.map((
-      {Culture_ID, Plant_ID, Medium, Duration_Of_Culture, Duration_Of_Bud_Regeneration, Duration_Of_Multiply_Bud, Duration_Of_Rooting, Temperature_Min, Temperature_Max, Light_Intensity, Lighting_Time}
-      , index) => (
-      <TableRow key={Culture_ID}>
-        <TableCell>{index + 1}</TableCell>
-        <TableCell>{Plant_ID}</TableCell>
-        <TableCell>{Medium}</TableCell>
-        <TableCell>{Duration_Of_Culture} days</TableCell>
-        <TableCell>{Duration_Of_Bud_Regeneration} days</TableCell>
-        <TableCell>{Duration_Of_Multiply_Bud} days</TableCell>
-        <TableCell>{Duration_Of_Rooting} days</TableCell>
-        <TableCell>{Temperature_Min}-{Temperature_Max}°C</TableCell>
-        <TableCell>{Light_Intensity} lux</TableCell>
-        <TableCell>{Lighting_Time} hours</TableCell>
-        <TableCell>
-          <EditIcon
-            onClick={showModal}
-            className="show-pointer text-secondary icon-bordered icon-spacing"
-          />
-          <DeleteIcon
-            onClick={showModal}
-            className="show-pointer text-danger icon-bordered"
-          />
-        </TableCell>
-      </TableRow>
-    ))}
-</TableBody>
-        </Table>
       </TableContainer>
       <div className="d-flex justify-content-center mt-4">
         <Pagination
@@ -189,21 +184,20 @@ const StyledTableCellWidth = styled(TableCell)`
       </div>
 
       <ModalContainer
-        title="Add Micropropagation"
+        title="Add Material to Inventory"
         isShow={modalOpen}
         handleCloseModal={closeModal}
-        handleSubmitModal={addMaterial}
+        handleSubmitModal={addMedium}
       >
         <>
           <small className="text-muted">
-          Materials can include buffering agents, supplements, antibiotics and antifungals, gelatin and agar, cell culture vessels, and equipment such as a laminar flow hood, CO2 incubator, centrifuge, and cell counter.
+            Material is a consumable product using in your farm such as seeds,
+            growing medium, fertilizer, pesticide, and so on.
           </small>
-          {/* <Form className="mt-3">
+          <Form className="mt-3">
             <Form.Group className="mb-3">
               <Form.Label>Choose type of material</Form.Label>
-              <Form.Select
-                onChange={(e) => setMaterialCategory(e.target.value)}
-              >
+              <Form.Select onChange={(e) => setMaterialType(e.target.value)}>
                 <option value="1">Seed</option>
                 <option value="2">Growing Medium</option>
                 <option value="3">Agrochemical</option>
@@ -229,10 +223,17 @@ const StyledTableCellWidth = styled(TableCell)`
             <Form.Group className="mb-3">
               <Row>
                 <Col>
+                  <Form.Label>Plant Type</Form.Label>
+                  <Form.Control
+                    type="text"
+                    onChange={(e) => setPlantType(e.target.value)}
+                  />
+                </Col>
+                <Col>
                   <Form.Label>Produced by</Form.Label>
                   <Form.Control
                     type="text"
-                    onChange={(e) => setProduced_By(e.target.value)}
+                    onChange={(e) => setProducedBy(e.target.value)}
                   />
                   {isError && (
                     <Form.Text className="text-danger">
@@ -271,7 +272,7 @@ const StyledTableCellWidth = styled(TableCell)`
                 <Col>
                   <Form.Label>Unit</Form.Label>
                   <Form.Select
-                    onChange={(e) => setMaterialCategory(e.target.value)}
+                    onChange={(e) => setMaterialType(e.target.value)}
                   >
                     <option value="1">Seeds</option>
                     <option value="2">Packets</option>
@@ -323,11 +324,11 @@ const StyledTableCellWidth = styled(TableCell)`
                 style={{ height: "120px" }}
               />
             </Form.Group>
-          </Form> */}
+          </Form>
         </>
       </ModalContainer>
     </Layout>
   );
 };
 
-export default Micropropagation;
+export default Plant;

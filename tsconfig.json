@@ -23,14 +23,15 @@
     "paths": {
       "@/components/*": ["components/*"],
       "@/data/*": ["data/*"],
-      "@/types/*": ["types/*"]
+      "@/types/*": ["types/*"],
+      "@/*": ["./src/*"],
+      "@/services/*": ["src/services/*"]
     },
   },
   "include": [
     "next-env.d.ts",
     "**/*.ts",
-    "**/*.tsx"
-  ],
+    "**/*.tsx" ],
   "exclude": [
     "node_modules"
   ]

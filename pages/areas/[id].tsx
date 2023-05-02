@@ -19,7 +19,7 @@ import Layout from "../../components/Layout";
 import ModalContainer from "../../components/ModalContainer";
 import Panel from "../../components/Panel";
 import TableTaskItem from "../../components/TableTaskItem";
-import useModal from "../../hooks/useModal";
+import useModal from "../../src/hooks/useModal";
 import { cropsData, tasksData, notesData } from "../../data";
 
 const ReservoirDetail: NextPage = () => {

@@ -8,7 +8,7 @@ import ModalContainer from "../components/ModalContainer";
 import PanelArea from "../components/PanelArea";
 import Layout from "../components/Layout";
 import { areaData } from "../data";
-import useModal from "../hooks/useModal";
+import useModal from "../src/hooks/useModal";
 
 const Areas: NextPage = () => {
   const { modalOpen, showModal, closeModal } = useModal();
@@ -73,9 +73,7 @@ const Areas: NextPage = () => {
       >
         <>
           <small className="text-muted">
-            Area is a space where you grow your plants. It could be a seeding
-            tray, a garden bed, or a pot or anything that describes the
-            different physical locations in your facility.
+          An area is a space where you grow your plants. It could be a lab, nursery, greenhouse, or anything that describes the different physical locations in your facility.
           </small>
           <Form className="mt-3">
             <Form.Group className="mb-3">
@@ -137,21 +135,7 @@ const Areas: NextPage = () => {
                   </Form.Select>
                 </Col>
               </Row>
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Select Reservoir</Form.Label>
-              <Form.Select onChange={(e) => setReservoir(e.target.value)}>
-                <option value="">Please select reservoir</option>
-                <option value="River">River</option>
-                <option value="Water Tank">Water Tank</option>
-              </Form.Select>
-              {isError && (
-                <Form.Text className="text-danger">
-                  The reservoir field is required
-                </Form.Text>
-              )}
-            </Form.Group>
-            <Form.Group>
+           
               <Form.Label>
                 Select photo <small className="text-muted">(optional)</small>
               </Form.Label>

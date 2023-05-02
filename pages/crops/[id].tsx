@@ -30,7 +30,7 @@ import Panel from "../../components/Panel";
 import TableTaskItem from "../../components/TableTaskItem";
 import Layout from "../../components/Layout";
 import { tasksData, notesData } from "../../data";
-import useModal from "../../hooks/useModal";
+import useModal from "../../src/hooks/useModal";
 
 const CropDetail: NextPage = () => {
   const { modalOpen, showModal, closeModal } = useModal();
@@ -86,6 +86,7 @@ const CropDetail: NextPage = () => {
               icon={<FaLongArrowAltLeft className="me-2" />}
               onClick={() => {}}
               variant="link"
+              textColor="#358a51"
             />
           </Link>
         </Col>
@@ -94,48 +95,48 @@ const CropDetail: NextPage = () => {
         <Col>
           <Tabs defaultActiveKey="basic">
             <Tab eventKey="basic" title="Basic Info">
-              <h3 className="py-3">Romaine</h3>
+              <h3 className="py-3">Asparagus plant</h3>
               <Row>
                 <Col className="mb-3">
                   <small>Batch ID</small>
                   <div>
-                    <strong>rom-24mar</strong>
+                    <strong>As-20mar</strong>
                   </div>
                 </Col>
                 <Col className="mb-3">
                   <small>Initial Planning</small>
                   <div>
-                    <strong>777 Post on Organic lettuce</strong>
+                    <strong>50 Post Lab 01</strong>
                   </div>
                 </Col>
               </Row>
               <Row>
-                <Col className="mb-3">
+                {/* <Col className="mb-3">
                   <small>Status</small>
                   <div>
                     <strong>0 Seeding, 777 Growing, 0 Dumped</strong>
                   </div>
-                </Col>
+                </Col> */}
                 <Col className="mb-3">
                   <small>Current Quantity</small>
                   <div>
-                    <strong>777 Post on Organic lettuce</strong>
+                    <strong>50 Post on Lab 02</strong>
                   </div>
                 </Col>
               </Row>
               <Row>
                 <Col className="mb-3">
-                  <small>Seeding Date</small>
+                  <small>Start Date</small>
                   <div>
-                    <strong>24/03/2021</strong>
+                    <strong>24/03/2022</strong>
                   </div>
                 </Col>
               </Row>
               <Row>
                 <Col className="mb-3">
-                  <small>Last Watering</small>
+                  <small>Remaining days</small>
                   <div>
-                    <strong>-</strong>
+                    <strong>7 days</strong>
                   </div>
                 </Col>
               </Row>
@@ -185,8 +186,8 @@ const CropDetail: NextPage = () => {
                   </div>
                 </Col>
               </Row>
-              <h5 className="py-3">Activity</h5>
-              <Card>
+              {/* <h5 className="py-3">Activity</h5> */}
+              {/* <Card>
                 <Card.Body>
                   <div className="d-flex">
                     <div>
@@ -195,7 +196,7 @@ const CropDetail: NextPage = () => {
                     <div>
                       <div>
                         Seeded <strong>777 Pots</strong> of rom-24mar on{" "}
-                        <strong>Organic lettuce</strong>
+                        <strong>Lab 01</strong>
                       </div>
                       <small className="mt-1 text-muted">
                         24/03/2021 at 14:51
@@ -203,7 +204,7 @@ const CropDetail: NextPage = () => {
                     </div>
                   </div>
                 </Card.Body>
-              </Card>
+              </Card> */}
             </Tab>
             <Tab eventKey="notes" title="Tasks &amp; Notes">
               <Row>
@@ -362,6 +363,17 @@ const CropDetail: NextPage = () => {
                 The title field is required
               </Form.Text>
             )}
+
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Assign to</Form.Label>
+            <Form.Select onChange={(e) => setSelectedCategory(e.target.value)}>
+              <option>Please select assignee</option>
+              <option value="1">Reservoir</option>
+              <option value="2">Pest Control</option>
+              <option value="3">Safety</option>
+              <option value="4">Sanitation</option>
+            </Form.Select>
           </Form.Group>
           <Form.Group className="mb-3">
             <Form.Label>Description</Form.Label>
@@ -425,7 +437,7 @@ const CropDetail: NextPage = () => {
       </ModalContainer>
 
       <ModalContainer
-        title="Move rom-24mar"
+        title="Move As-20mar"
         isShow={modalMoveOpen}
         handleCloseModal={() => setModalMoveOpen(false)}
         handleSubmitModal={() => setModalMoveOpen(false)}
@@ -447,10 +459,45 @@ const CropDetail: NextPage = () => {
             </Form.Select>
           </Form.Group>
           <Form.Group className="mb-3">
-            <Form.Label>{`How many plants do you want to move? (${moveQty})`}</Form.Label>
-            <Form.Range
+            {/* <Form.Label>{`How many plants do you want to move? (${moveQty})`}</Form.Label> */}
+            <Form.Label>{`How many plants do you want to move?`}</Form.Label>
+            {/* <Form.Range
               value={moveQty}
               onChange={(e) => setMoveQty(Number(e.target.value))}
+            /> */}
+            <input
+              type="text"
+              value=""
+              onChange={(e) => setMoveQty(Number(e.target.value))}
+              style={{
+                padding: "10px",
+                fontSize: "16px",
+                borderRadius: "5px",
+                border: "1px solid #ccc",
+                outline: "none",
+                width: "100%",
+              }}
+            />
+          </Form.Group>
+          <Form.Group className="mb-3">
+            {/* <Form.Label>{`How many plants do you want to move? (${moveQty})`}</Form.Label> */}
+            <Form.Label>{`Expected cell culture duration?`}</Form.Label>
+            {/* <Form.Range
+              value={moveQty}
+              onChange={(e) => setMoveQty(Number(e.target.value))}
+            /> */}
+            <input
+              type="text"
+              value=""
+              onChange={(e) => setMoveQty(Number(e.target.value))}
+              style={{
+                padding: "10px",
+                fontSize: "16px",
+                borderRadius: "5px",
+                border: "1px solid #ccc",
+                outline: "none",
+                width: "100%",
+              }}
             />
           </Form.Group>
         </Form>
