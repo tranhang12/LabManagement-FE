@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { NextPage } from "next";
 import { Col, Form, InputGroup, Row } from "react-bootstrap";
 import { FaPlus } from "react-icons/fa";
@@ -18,8 +18,10 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import Pagination from "@mui/lab/Pagination";
 import useSortData from "../src/hooks/useSortData";
 import usePagination from "../src/hooks/usePagination";
-import { cultureData } from "../data";
 
+import withAuth from "@/middleware/withAuth";
+import { useSelector } from "react-redux";
+import { selectAuthState } from "@/store/auth";
 import ButtonIcon from "../components/ButtonIcon";
 import ModalContainer from "../components/ModalContainer";
 import Layout from "../components/Layout";
@@ -27,54 +29,221 @@ import apiClient from "@/services/apiClient";
 import useModal from "../src/hooks/useModal";
 
 const Micropropagation: NextPage = () => {
-  const { modalOpen, showModal, closeModal } = useModal();
-  const [plant, setPlant] = useState("");
-  const [cultureMedium, setCultureMedium] = useState("");
-  const [culture, setCulture] = useState("");
-  const [budRegeneration, setBudRegeneration] = useState("");
-  const [multiplyBud, setMultiplyBud] = useState("");
-  const [rooting, setRooting] = useState("");
-  const [temperature, setTemperature] = useState("");
+  const resetFields = () => {
+    setPlant(0);
+    setCultureMedium(0);
+    setCulture(0);
+    setBudRegeneration(0);
+    setMultiplyBud(0);
+    setRooting(0);
+    setTemperatureMax(0);
+    setTemperatureMin(0);
+    setLightIntensity("");
+    setLightingTime("");
+  };
+  const { modalOpen, showModal, closeModal } = useModal(resetFields);
+  const [plant, setPlant] = useState(0);
+  const [cultureMedium, setCultureMedium] = useState(0);
+  const [culture, setCulture] = useState(0);
+  const [budRegeneration, setBudRegeneration] = useState(0);
+  const [multiplyBud, setMultiplyBud] = useState(0);
+  const [rooting, setRooting] = useState(0);
+  const [temperatureMax, setTemperatureMax] = useState(0);
+  const [temperatureMin, setTemperatureMin] = useState(0);
   const [lightIntensity, setLightIntensity] = useState("");
   const [lightingTime, setLightingTime] = useState("");
   const [isError, setIsError] = useState(false);
 
-  //fetch data
-  const [micropropagations, setMicropropagations] = useState([]);
-  const [plants, setPlants] = useState([]);
-  const [cultureMediums, setCultureMediums] = useState([]);
-  
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const responseMaterials = await apiClient.get("/material");
-      const responsePlants = await apiClient.get("/plant");
-      const responseCultures = await apiClient.get("/culture");
-      
-      setMicropropagations(responseMaterials.data.result);
-      setPlants(responsePlants.data.result);
-      setCultureMediums(responseCultures.data.result);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    }
+  interface IMicrop {
+    Culture_ID: number;
+    Plant_ID: number;
+    Medium_ID: number;
+    Duration_Of_Culture: number;
+    Duration_Of_Bud_Regeneration: number;
+    Duration_Of_Multiply_Bud: number;
+    Duration_Of_Rooting: number;
+    Temperature_Min: number;
+    Temperature_Max: number;
+    Light_Intensity: number;
+    Lighting_Time: number;
+  }
 
+  const authState = useSelector(selectAuthState);
+  const { accessToken } = authState;
+  const [Data, setData] = useState([]);
+  const fetchData = useCallback(async () => {
+    try {
+      const response = await apiClient.get("/culture", {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (response.data.status) {
+        setData(response.data.result);
+      } else {
+        console.error("Error fetching current plant: " + response.data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching current plant: " + error);
+    }
+  }, [accessToken]);
+
+  useEffect(() => {
     fetchData();
-  }, []);
-  // add new material
-  const addMaterial = () => {
-    if (!culture) {
-      setIsError(true);
-    } else {
-      setIsError(false);
-      closeModal();
+  }, [fetchData]);
+
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+
+  const handleShowConfirmModal = (item: any) => {
+    setItemToDelete(item);
+    setShowConfirmModal(true);
+  };
+
+  const handleCloseConfirmModal = () => {
+    setShowConfirmModal(false);
+    setItemToDelete(null);
+  };
+
+  const handleDeleteItem = async (item: any) => {
+    // call API to delete item
+
+    const response = await apiClient.delete(`/plant/${item.Plant_ID}`, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    // refresh data
+    fetchData();
+    // close modal
+    handleCloseConfirmModal();
+    resetFields();
+  };
+
+  // EDIT USER
+  const [editing, setEditing] = useState<IMicrop | null>(null);
+
+  const handleEdit = (microp: IMicrop) => {
+    setEditing(microp);
+
+    // Set the default values for the input fields
+    setPlant(microp.Plant_ID);
+    setCultureMedium(0);
+    setCulture(0);
+    setBudRegeneration(0);
+    setMultiplyBud(0);
+    setRooting(0);
+    setTemperatureMax(0);
+    setTemperatureMin(0);
+    setLightIntensity("");
+    setLightingTime("");
+
+    setIsAdding(false);
+    showModal();
+  };
+
+  const handleSave = async () => {
+    if (!editing) {
+      console.error("No Plant selected for editing");
+      return;
+    }
+    // Validate Plant input and call API to update Plant information
+    try {
+      const response = await apiClient.put(
+        `/culture/${editing?.Culture_ID}`,
+        {
+          Plant_ID: plant,
+          Medium_ID: cultureMedium,
+          Duration_Of_Culture: culture,
+          Duration_Of_Bud_Regeneration: budRegeneration,
+          Duration_Of_Multiply_Bud: multiplyBud,
+          Duration_Of_Rooting: rooting,
+          Temperature_Min: temperatureMin,
+          Temperature_Max: temperatureMax,
+          Light_Intensity: lightIntensity,
+          Lighting_Time: lightingTime,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      if (response.data.status) {
+        // Refresh user data
+        fetchData();
+        console.log(response);
+
+        // Close modal and reset editing
+        closeModal();
+        resetFields();
+        setEditing(null);
+      } else {
+        console.error("Error updating user: " + response.data.message);
+      }
+    } catch (error) {
+      console.error("Error updating user: " + error);
+    }
+  };
+
+  // ADD
+  const [isAdding, setIsAdding] = useState(false);
+  const handleAdd = () => {
+    setIsAdding(true);
+    showModal();
+  };
+  const handleCreate = async () => {
+    // Validate user input and call API to create a new user
+    try {
+      const response = await apiClient.post(
+        "/users/createUser",
+        {
+          Plant_ID: plant,
+          Medium_ID: cultureMedium,
+          Duration_Of_Culture: culture,
+          Duration_Of_Bud_Regeneration: budRegeneration,
+          Duration_Of_Multiply_Bud: multiplyBud,
+          Duration_Of_Rooting: rooting,
+          Temperature_Min: temperatureMin,
+          Temperature_Max: temperatureMax,
+          Light_Intensity: lightIntensity,
+          Lighting_Time: lightingTime,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      if (response.data.status) {
+        // Refresh culture data
+        fetchData();
+        console.log(response);
+
+        // Close modal and reset editing
+        closeModal();
+        resetFields();
+        setIsAdding(false);
+      } else {
+        console.error("Error creating culture: " + response.data.message);
+      }
+    } catch (error) {
+      console.error("Error creating culture: " + error);
     }
   };
 
   const itemsPerPage = 10;
 
   const { sortedData, requestSort, sortConfig, handleRequestSort } =
-    useSortData(cultureData);
+    useSortData([]);
   const { paginatedData, totalPages, currentPage, handleChangePage } =
     usePagination(sortedData, itemsPerPage);
 
@@ -98,21 +267,20 @@ const Micropropagation: NextPage = () => {
     font-weight: bold;
     text-align: center;
   `;
- // css for note table
+  // css for note table
   const NotesTableCell = styled(TableCell)<{ showFull?: boolean }>`
     max-width: 300px;
     white-space: ${({ showFull }) => (showFull ? "normal" : "nowrap")};
     overflow: hidden;
     text-overflow: ellipsis;
   `;
-//css for setting width of id table
-const StyledTableCellWidth = styled(TableCell)`
-  width: 5px; 
-  color: white;
+  //css for setting width of id table
+  const StyledTableCellWidth = styled(TableCell)`
+    width: 5px;
+    color: white;
     font-weight: bold;
     text-align: center;
-`;
-
+  `;
 
   return (
     <Layout>
@@ -133,51 +301,55 @@ const StyledTableCellWidth = styled(TableCell)`
       </Row>
       <TableContainer component={Paper} className="my-4">
         <Table>
-        <StyledTableHead>
-  <TableRow>
-  <StyledTableCell>#</StyledTableCell>
+          <StyledTableHead>
+            <TableRow>
+              <StyledTableCell>#</StyledTableCell>
 
-    <StyledTableCell>Plant</StyledTableCell>
-    <StyledTableCell>Culture Medium</StyledTableCell>
-    <StyledTableCell>Culture</StyledTableCell>
-    <StyledTableCell>Bud Regeneration</StyledTableCell>
-    <StyledTableCell>Multiply Bud</StyledTableCell>
-    <StyledTableCell>Rooting</StyledTableCell>
-    <StyledTableCell>Temperature</StyledTableCell>
-    <StyledTableCell>Light Intensity</StyledTableCell>
-    <StyledTableCell>Lighting Time</StyledTableCell>
-    <StyledTableCell>Actions</StyledTableCell>
-  </TableRow>
-</StyledTableHead>
-<TableBody>
-  {paginatedData &&
-    paginatedData.map((
-      {Culture_ID, Plant_ID, Medium, Duration_Of_Culture, Duration_Of_Bud_Regeneration, Duration_Of_Multiply_Bud, Duration_Of_Rooting, Temperature_Min, Temperature_Max, Light_Intensity, Lighting_Time}
-      , index) => (
-      <TableRow key={Culture_ID}>
-        <TableCell>{index + 1}</TableCell>
-        <TableCell>{Plant_ID}</TableCell>
-        <TableCell>{Medium}</TableCell>
-        <TableCell>{Duration_Of_Culture} days</TableCell>
-        <TableCell>{Duration_Of_Bud_Regeneration} days</TableCell>
-        <TableCell>{Duration_Of_Multiply_Bud} days</TableCell>
-        <TableCell>{Duration_Of_Rooting} days</TableCell>
-        <TableCell>{Temperature_Min}-{Temperature_Max}°C</TableCell>
-        <TableCell>{Light_Intensity} lux</TableCell>
-        <TableCell>{Lighting_Time} hours</TableCell>
-        <TableCell>
-          <EditIcon
-            onClick={showModal}
-            className="show-pointer text-secondary icon-bordered icon-spacing"
-          />
-          <DeleteIcon
-            onClick={showModal}
-            className="show-pointer text-danger icon-bordered"
-          />
-        </TableCell>
-      </TableRow>
-    ))}
-</TableBody>
+              <StyledTableCell>Plant</StyledTableCell>
+              <StyledTableCell>Culture Medium</StyledTableCell>
+              <StyledTableCell>Culture</StyledTableCell>
+              <StyledTableCell>Bud Regeneration</StyledTableCell>
+              <StyledTableCell>Multiply Bud</StyledTableCell>
+              <StyledTableCell>Rooting</StyledTableCell>
+              <StyledTableCell>Temperature</StyledTableCell>
+              <StyledTableCell>Light Intensity</StyledTableCell>
+              <StyledTableCell>Lighting Time</StyledTableCell>
+              <StyledTableCell>Actions</StyledTableCell>
+            </TableRow>
+          </StyledTableHead>
+          <TableBody>
+            {paginatedData &&
+              paginatedData.map((item, index) => (
+                <TableRow key={item.Culture_ID}>
+                  <TableCell>
+                    {(currentPage - 1) * itemsPerPage + index + 1}
+                  </TableCell>
+                  <TableCell>{item.Plant_ID}</TableCell>
+                  <TableCell>{item.Medium}</TableCell>
+                  <TableCell>{item.Duration_Of_Culture} days</TableCell>
+                  <TableCell>
+                    {item.Duration_Of_Bud_Regeneration} days
+                  </TableCell>
+                  <TableCell>{item.Duration_Of_Multiply_Bud} days</TableCell>
+                  <TableCell>{item.Duration_Of_Rooting} days</TableCell>
+                  <TableCell>
+                    {item.Temperature_Min}-{item.Temperature_Max}°C
+                  </TableCell>
+                  <TableCell>{item.Light_Intensity} lux</TableCell>
+                  <TableCell>{item.Lighting_Time} hours</TableCell>
+                  <TableCell>
+                    <EditIcon
+                      onClick={showModal}
+                      className="show-pointer text-secondary icon-bordered icon-spacing"
+                    />
+                    <DeleteIcon
+                      onClick={showModal}
+                      className="show-pointer text-danger icon-bordered"
+                    />
+                  </TableCell>
+                </TableRow>
+              ))}
+          </TableBody>
         </Table>
       </TableContainer>
       <div className="d-flex justify-content-center mt-4">
@@ -189,142 +361,17 @@ const StyledTableCellWidth = styled(TableCell)`
       </div>
 
       <ModalContainer
-        title="Add Micropropagation"
+        title={isAdding ? "Add Plant" : "Edit Plant"}
         isShow={modalOpen}
         handleCloseModal={closeModal}
-        handleSubmitModal={addMaterial}
+        handleSubmitModal={isAdding ? handleCreate : handleSave}
       >
         <>
-          <small className="text-muted">
-          Materials can include buffering agents, supplements, antibiotics and antifungals, gelatin and agar, cell culture vessels, and equipment such as a laminar flow hood, CO2 incubator, centrifuge, and cell counter.
-          </small>
-          {/* <Form className="mt-3">
-            <Form.Group className="mb-3">
-              <Form.Label>Choose type of material</Form.Label>
-              <Form.Select
-                onChange={(e) => setMaterialCategory(e.target.value)}
-              >
-                <option value="1">Seed</option>
-                <option value="2">Growing Medium</option>
-                <option value="3">Agrochemical</option>
-                <option value="4">Label and Crops Support</option>
-                <option value="5">Seeding Container</option>
-                <option value="6">Post Harvest Supply</option>
-                <option value="7">Plant</option>
-                <option value="8">Other Material</option>
-              </Form.Select>
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Variety Name</Form.Label>
-              <Form.Control
-                type="text"
-                onChange={(e) => setMaterialName(e.target.value)}
-              />
-              {isError && (
-                <Form.Text className="text-danger">
-                  The name field is required
-                </Form.Text>
-              )}
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Row>
-                <Col>
-                  <Form.Label>Produced by</Form.Label>
-                  <Form.Control
-                    type="text"
-                    onChange={(e) => setProduced_By(e.target.value)}
-                  />
-                  {isError && (
-                    <Form.Text className="text-danger">
-                      The produced by field is required
-                    </Form.Text>
-                  )}
-                </Col>
-              </Row>
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Variety Name</Form.Label>
-              <Form.Control
-                type="text"
-                onChange={(e) => setMaterialName(e.target.value)}
-              />
-              {isError && (
-                <Form.Text className="text-danger">
-                  The name field is required
-                </Form.Text>
-              )}
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Row>
-                <Col>
-                  <Form.Label>Quantity</Form.Label>
-                  <Form.Control
-                    type="text"
-                    onChange={(e) => setQuantity(e.target.value)}
-                  />
-                  {isError && (
-                    <Form.Text className="text-danger">
-                      The quantity field is required
-                    </Form.Text>
-                  )}
-                </Col>
-                <Col>
-                  <Form.Label>Unit</Form.Label>
-                  <Form.Select
-                    onChange={(e) => setMaterialCategory(e.target.value)}
-                  >
-                    <option value="1">Seeds</option>
-                    <option value="2">Packets</option>
-                    <option value="3">Gram</option>
-                    <option value="4">Kilogram</option>
-                  </Form.Select>
-                </Col>
-              </Row>
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Row>
-                <Col>
-                  <Form.Label>Price per Unit</Form.Label>
-                  <InputGroup className="mb-2">
-                    <InputGroup.Text>€</InputGroup.Text>
-                    <Form.Control
-                      type="text"
-                      onChange={(e) => setPriceUnit(e.target.value)}
-                    />
-                  </InputGroup>
+                <Form>
 
-                  {isError && (
-                    <Form.Text className="text-danger">
-                      The price field is required
-                    </Form.Text>
-                  )}
-                </Col>
-                <Col>
-                  <Form.Label>Expiration date</Form.Label>
-                  <Form.Control
-                    type="date"
-                    onChange={(e) => setExpirationDate(e.target.value)}
-                    value={expirationDate}
-                  />
-                  {isError && (
-                    <Form.Text className="text-danger">
-                      The expiration date field is required
-                    </Form.Text>
-                  )}
-                </Col>
-              </Row>
-            </Form.Group>
-            <Form.Group>
-              <Form.Label>Additional Notes</Form.Label>
-              <Form.Control
-                as="textarea"
-                onChange={(e) => setNotes(e.target.value)}
-                value={notes}
-                style={{ height: "120px" }}
-              />
-            </Form.Group>
-          </Form> */}
+                </Form>
         </>
+
       </ModalContainer>
     </Layout>
   );

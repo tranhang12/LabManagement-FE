@@ -31,7 +31,7 @@
   "include": [
     "next-env.d.ts",
     "**/*.ts",
-    "**/*.tsx" ],
+    "**/*.tsx", "src/hooks/useSocket.js" ],
   "exclude": [
     "node_modules"
   ]

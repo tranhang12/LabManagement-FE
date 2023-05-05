@@ -17,11 +17,18 @@ import Panel from "../components/Panel";
 import { iTableTaskItem } from "../components/TableTaskItem";
 import TableTaskItem from "../components/TableTaskItem";
 import Layout from "../components/Layout";
-import { tasksData } from "../data";
 import useModal from "../src/hooks/useModal";
+import apiClient from "@/services/apiClient";
 
 const Tasks: NextPage = () => {
-  const { modalOpen, showModal, closeModal } = useModal();
+  const resetFields = () => {
+    setSelectedCategory("");
+    setTitle("");
+    setPriority("");
+    setDueDate("");
+    setDesc("");
+  };
+  const { modalOpen, showModal, closeModal } = useModal(resetFields);
   const [dueDate, setDueDate] = useState("");
   const [priority, setPriority] = useState("");
   const [title, setTitle] = useState("");
@@ -35,14 +42,17 @@ const Tasks: NextPage = () => {
   const target = useRef(null);
 
   useEffect(() => {
-    if (!filterPriority) {
-      setData(tasksData);
-    } else {
-      const filteredData = tasksData.filter(
-        (task) => task.priority === filterPriority
-      );
-      setData(filteredData);
-    }
+    const fetchData = async () => {
+      try {
+        const response = await apiClient.get("/tasks/allTask");
+        const tasks = response.data.result;
+        setData(tasks);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
   }, [filterCategory, filterPriority, filter]);
 
   const addTask = () => {
@@ -78,8 +88,9 @@ const Tasks: NextPage = () => {
               <thead>
                 <tr>
                   <th />
-                  <th className="w-75">Items</th>
+                  <th className="w-60">Items</th>
                   <th>Category</th>
+                  <th>Assigned to</th>
                   <th />
                 </tr>
               </thead>
@@ -88,11 +99,12 @@ const Tasks: NextPage = () => {
                   data.map(
                     ({
                       id,
-                      item,
-                      details,
-                      dueDate,
-                      priority,
-                      category,
+                      Title,
+                      Description,
+                      Due_Date,
+                      Priority,
+                      Task_Category,
+                      Assigned_To,
                     }: iTableTaskItem) => (
                       <tr key={id}>
                         <td>
@@ -103,14 +115,19 @@ const Tasks: NextPage = () => {
                         <td>
                           <TableTaskItem
                             id={id}
-                            item={item}
-                            details={details}
-                            dueDate={dueDate}
-                            priority={priority}
+                            Title={Title}
+                            Description={Description}
+                            Due_Date={Due_Date}
+                            Priority={Priority}
                           />
                         </td>
                         <td>
-                          <span className="text-uppercase">{category}</span>
+                          <span className="text-uppercase">
+                            {Task_Category}
+                          </span>
+                        </td>
+                        <td>
+                          <span className="text-uppercase">{Assigned_To}</span>
                         </td>
                         <td>
                           <FaEdit
@@ -134,12 +151,8 @@ const Tasks: NextPage = () => {
                   All
                 </option>
                 <option value="Area">Area</option>
-                <option value="Reservoir">Reservoir</option>
                 <option value="Crop">Crop</option>
                 <option value="General">General</option>
-                <option value="Pest Control">Pest Control</option>
-                <option value="Safety">Safety</option>
-                <option value="Sanitation">Sanitation</option>
               </Form.Select>
             </Form.Group>
             <Form.Group className="mb-3">
@@ -248,10 +261,10 @@ const Tasks: NextPage = () => {
                 onChange={(e) => setSelectedCategory(e.target.value)}
               >
                 <option>Please select category</option>
-                <option value="1">Reservoir</option>
-                <option value="2">Pest Control</option>
-                <option value="3">Safety</option>
-                <option value="4">Sanitation</option>
+                <option value="Move">Move</option>
+                <option value="Harvest">Harvest</option>
+                <option value="Dump">Dump</option>
+                <option value="Other">Other</option>
               </Form.Select>
             </Form.Group>
             <Form.Group className="mb-3">
@@ -266,6 +279,18 @@ const Tasks: NextPage = () => {
                   The title field is required
                 </Form.Text>
               )}
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Assign to</Form.Label>
+              <Form.Select
+                onChange={(e) => setSelectedCategory(e.target.value)}
+              >
+                <option>Please select assignee</option>
+                <option value="Move">Move</option>
+                <option value="Harvest">Harvest</option>
+                <option value="Dump">Dump</option>
+                <option value="Other">Other</option>
+              </Form.Select>
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Description</Form.Label>

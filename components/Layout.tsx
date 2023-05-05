@@ -3,16 +3,40 @@ import Link from "next/link";
 import React from "react";
 import { Container, Col, Nav, Navbar, Row } from "react-bootstrap";
 import { FaPowerOff } from "react-icons/fa";
+import Cookies from 'js-cookie';
 
 import Footer from "components/Footer";
 import Sidebar from "./Sidebar";
-import { navData } from "../data";
+import { useRouter } from "next/router";
+import { useSelector, useDispatch } from 'react-redux';
+import { selectAuthState,logoutSuccess  } from '@/store/auth';
+import withAuth from "@/middleware/withAuth";
+import iNavData from "@/types/iNavData";
+import { adminNavData, userNavData } from "@/data/index";
+
 
 interface iLayout {
   children: React.ReactNode;
 }
 
 const Layout = ({ children }: iLayout) => {
+  const router = useRouter();
+  const authState = useSelector(selectAuthState);
+  const dispatch = useDispatch();
+
+  const userRole = authState.user?.Is_Admin;
+  const displayNavData = userRole === 1 ? adminNavData : userNavData;
+
+   const handleSignOut = () => {
+    // Clear the session data from cookies
+  Cookies.remove('accessToken');
+  
+  // Dispatch an action to clear the session state in the store
+  dispatch(logoutSuccess());
+
+  // Redirect the user to the login page
+  router.push('/auth/login');
+  };
   return (
     <Row className="mx-0">
       <Sidebar />
@@ -27,8 +51,8 @@ const Layout = ({ children }: iLayout) => {
           <Navbar.Collapse>
 
             <Nav className="d-md-none">
-              {navData &&
-                navData.map(({ name, route, icon }) => (
+              {displayNavData &&
+                displayNavData.map(({ name, route, icon }: iNavData) => (
                   <Nav.Item key={`mobile-${name}`}>
                     <Nav.Link href={route}>
                       <div className="d-flex align-items-center">
@@ -41,12 +65,10 @@ const Layout = ({ children }: iLayout) => {
             </Nav>
             <div className="dropdown-divider d-md-none" />
             <Nav className="ms-auto">
-              <Nav.Link>
+              <Nav.Link onClick={handleSignOut}>
                 <div className="d-flex align-items-center">
                   <FaPowerOff className="me-3" />
-                  <Link href="/auth/login">
                     <span className="text-decoration-none">Sign Out</span>
-                  </Link>
                 </div>
               </Nav.Link>
             </Nav>
@@ -61,4 +83,4 @@ const Layout = ({ children }: iLayout) => {
   );
 };
 
-export default Layout;
+export default withAuth(Layout);

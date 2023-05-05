@@ -1,5 +1,4 @@
 
-
 import {
   TableContainer,
   Table,
@@ -56,6 +55,7 @@ const Crops: NextPage = () => {
   const { paginatedData, totalPages, currentPage, handleChangePage } =
     usePagination(sortedData, itemsPerPage);
 
+    
   const [showFullNotes, setShowFullNotes] = useState<Record<number, boolean>>(
     {}
   );
@@ -101,52 +101,7 @@ const StyledTableCellWidth = styled(TableCell)`
                 onClick={showModal}
                 variant="primary"
               />
-              {/* <Table responsive className="my-4">
-                <thead>
-                  <tr>
-                    <th>Crop Variety</th>
-                    <th>Batch ID</th>
-                    <th>Start Date</th>
-                    <th>Planned Time</th>
-                    <th>Remaining days</th>
-                    <th>Quantity</th>
-                    <th>Status</th>
-                    <th />
-                  </tr>
-                </thead>
-                <tbody>
-                  {cropsData &&
-                    cropsData.map(
-                      ({
-                        id,
-                        varieties,
-                        batchId,
-                        daysSinceSeeding,
-                        remain,
-                        qty,
-                        seeding,
-                        growing,
-                        dumped,
-                      }) => (
-                        <tr key={id}>
-                          <td>
-                            <Link href={`/crops/${id}`}>{varieties}</Link>
-                          </td>
-                          <td>{batchId}</td>
-                          <td>{daysSinceSeeding}</td>
-                          <td>{qty}</td>
-                          <td>{`${seeding} Seeding, ${growing} Growing, ${dumped} Dumped`}</td>
-                          <td>
-                            <FaEdit
-                              onClick={showModal}
-                              className="show-pointer"
-                            />
-                          </td>
-                        </tr>
-                      )
-                    )}
-                </tbody>
-              </Table> */}
+            
                     <TableContainer component={Paper} className="my-4">
         <Table>
           <StyledTableHead>
@@ -269,23 +224,7 @@ const StyledTableCellWidth = styled(TableCell)`
       </div>
             </Tab>
             <Tab eventKey="archives" title="Archives">
-              {/* <Table responsive className="my-4">
-                <thead>
-                  <tr>
-                    <th>Crop Variety</th>
-                    <th>Batch ID</th>
-                    <th>Days Since Seeding</th>
-                    <th>Initial Quantity</th>
-                    <th>Status</th>
-                    <th />
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td colSpan={6}>No crops available.</td>
-                  </tr>
-                </tbody>
-              </Table> */}
+             
             </Tab>
           </Tabs>
         </Col>

@@ -5,10 +5,13 @@ import { useRouter } from "next/router";
 import { Card, Col, Container, Form, Row } from "react-bootstrap";
 import { FaUnlock } from "react-icons/fa";
 import ButtonIcon from "components/ButtonIcon";
+
+import { login } from "@/store/auth";
+import { useDispatch } from "react-redux";
+import { AppDispatch } from "@/store";
+import { unwrapResult } from "@reduxjs/toolkit";
 import { useForm } from "react-hook-form";
 import { SubmitHandler } from "react-hook-form";
-
-import { login as loginUser, saveToken } from "@/middleware/auth/auth";
 
 type LoginForm = {
   userName: string;
@@ -16,6 +19,7 @@ type LoginForm = {
 };
 
 const LogIn: NextPage = () => {
+  const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   const [showError, setShowError] = useState(false);
 
@@ -32,20 +36,15 @@ const LogIn: NextPage = () => {
   }, [errors]);
 
   const onSubmit: SubmitHandler<LoginForm> = async (data) => {
-    try {
-      const token = await loginUser(data.userName, data.password);
-
-      if (token) {
-        saveToken(token);
-        router.push('/');
-      } else {
+    dispatch(login(data))
+      .then(unwrapResult)
+      .then(() => router.push("/"))
+      .catch((error) => {
+        console.error(error);
         setShowError(true);
-      }
-    } catch (error) {
-      console.error(error);
-      setShowError(true);
-    }
+      });
   };
+
 
   return (
     <div className="bg-gray d-flex align-items-center vh-100">
@@ -65,17 +64,6 @@ const LogIn: NextPage = () => {
                 <Form onSubmit={handleSubmit(onSubmit)}>
                   <Form.Group className="mb-3">
                     <Form.Label style={{ width: "100%" }}>
-                      {/* Username
-
-                    Need an account? 
-                      <button 
-                      type="button"
-                      className="btn btn-link"
-                      onClick={() => {
-                        router.push('/auth/register')}}
-                        >
-                        Sign up!
-                      </button> */}
                       <div
                         style={{
                           display: "flex",

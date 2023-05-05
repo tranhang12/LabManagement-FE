@@ -1,31 +1,176 @@
-import { useState } from "react";
+import { useState, useCallback, useEffect } from "react";
 import type { NextPage } from "next";
 import { Col, Form, Row } from "react-bootstrap";
 import { FaPlus } from "react-icons/fa";
+
+import withAuth from "@/middleware/withAuth";
+import { useSelector } from "react-redux";
+import { selectAuthState } from "@/store/auth";
 
 import ButtonIcon from "../components/ButtonIcon";
 import ModalContainer from "../components/ModalContainer";
 import PanelArea from "../components/PanelArea";
 import Layout from "../components/Layout";
-import { areaData } from "../data";
+import apiClient from "@/services/apiClient";
 import useModal from "../src/hooks/useModal";
 
 const Areas: NextPage = () => {
-  const { modalOpen, showModal, closeModal } = useModal();
-  const [areaName, setAreaName] = useState("");
-  const [areaSize, setAreaSize] = useState("");
-  const [areaSizeUnit, setAreaSizeUnit] = useState("Ha");
-  const [areaType, setAreaType] = useState("Seeding");
-  const [areaLocations, setAreaLocations] = useState("Field (Outdoor");
-  const [reservoir, setReservoir] = useState("");
-  const [isError, setIsError] = useState(false);
+  const resetFields = () => {
+    setAreaName("");
+    setAreaSize(0);
+    setAreaUnit("");
+    setAreaType("");
+    setAreaLocations("");
+  setQuantity(0);
+  };
 
-  const addAreas = () => {
-    if (!areaName || !areaSize || !reservoir) {
-      setIsError(true);
-    } else {
-      setIsError(false);
-      closeModal();
+  const { modalOpen, showModal, closeModal } = useModal(resetFields);
+  const [areaName, setAreaName] = useState("");
+  const [areaSize, setAreaSize] = useState(0);
+  const [areaUnit, setAreaUnit] = useState("m2");
+  const [areaType, setAreaType] = useState("Tissue culture room");
+  const [areaLocations, setAreaLocations] = useState("");
+  const [quantity, setQuantity] = useState(0);
+  const [isError, setIsError] = useState(false);
+  const authState = useSelector(selectAuthState);
+  const { accessToken } = authState;
+
+  const [areaData, setAreaData] = useState<IArea[]>([]);
+  interface IArea {
+    Area_ID: number;
+    Area_Name: string;
+    Area_Size: number;
+    Area_Unit: string;
+    Area_Type: string;
+    Area_Locations: string;
+  Quantity: number;
+  };
+
+  //fetch data
+  const fetchData = useCallback(async () => {
+    try {
+      const response = await apiClient.get("/area", {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (response.data.status) {
+        setAreaData(response.data.result);
+      } else {
+        console.error("Error fetching current area: " + response.data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching current area: " + error);
+    }
+  }, [accessToken]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // EDIT 
+  const [editing, setEditing] = useState<IArea | null>(null);
+
+  const handleEdit = (area: IArea) => {
+    setEditing(area);
+
+    // Set the default values for the input fields
+    setAreaName(area.Area_Name);
+    setAreaSize(area.Area_Size);
+    setAreaUnit(area.Area_Unit);
+    setAreaType(area.Area_Type);
+    setAreaLocations(area.Area_Locations);
+  setQuantity(area.Quantity);
+
+    setIsAdding(false);
+    showModal();
+  };
+
+  const handleSave = async () => {
+    if (!editing) {
+      console.error("No area selected for editing");
+      return;
+    }
+    // Validate area input and call API to update area information
+    try {
+      const response = await apiClient.put(
+        `/area/${editing?.Area_ID}`,
+        {
+          Area_Name: areaName,
+          Area_Size: areaSize,
+    Area_Unit: areaUnit,
+    Area_Type: areaType,
+    Area_Locations: areaLocations,
+  Quantity: quantity,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      if (response.data.status) {
+        // Refresh area data
+        fetchData();
+        console.log(response);
+
+        // Close modal and reset editingarea
+        closeModal();
+        resetFields();
+        setEditing(null);
+      } else {
+        console.error("Error updating: " + response.data.message);
+      }
+    } catch (error) {
+      console.error("Error updating: " + error);
+    }
+  };
+
+  // ADD 
+  const [isAdding, setIsAdding] = useState(false);
+  const handleAdd = () => {
+    setIsAdding(true);
+    showModal();
+  };
+  const handleCreate = async () => {
+    // Validate input and call API to create a new 
+    try {
+      const response = await apiClient.post(
+        "/area",
+        {
+          Area_Name: areaName,
+          Area_Size: areaSize,
+    Area_Unit: areaUnit,
+    Area_Type: areaType,
+    Area_Locations: areaLocations,
+  Quantity: quantity,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      if (response.data.status) {
+        // Refresh data
+        fetchData();
+        console.log(response);
+
+        // Close modal and reset editing
+        closeModal();
+        resetFields();
+        setIsAdding(false);
+      } else {
+        console.error("Error creating area: " + response.data.message);
+      }
+    } catch (error) {
+      console.error("Error creating area: " + error);
     }
   };
 
@@ -41,35 +186,35 @@ const Areas: NextPage = () => {
           <ButtonIcon
             label="Add Area"
             icon={<FaPlus className="me-2" />}
-            onClick={showModal}
+            onClick={handleAdd}
             variant="primary"
           />
         </Col>
       </Row>
       <Row className="mt-3">
         {areaData.map(
-          ({ id, name, type, size, unit, batches, quantity, edit }) => (
-            <Col xs={12} sm={12} md={6} lg={4} key={id}>
+          (item, index) => (
+            <Col xs={12} sm={12} md={6} lg={4} key={item.Area_ID}>
               <PanelArea
-                id={id}
-                name={name}
-                type={type}
-                size={size}
-                unit={unit}
-                batches={batches}
-                quantity={quantity}
-                edit={edit}
-                onClick={showModal}
+                id={item.Area_ID}
+                name={item.Area_Name}
+                type={item.Area_Type}
+                size={item.Area_Size}
+                unit={item.Area_Unit}
+                location={item.Area_Locations}
+                quantity={item.Quantity}
+                edit={true}
+                onClick={() => handleEdit(item as IArea)}
               />
             </Col>
           )
         )}
       </Row>
       <ModalContainer
-        title="Add New Area"
-        isShow={modalOpen}
-        handleCloseModal={closeModal}
-        handleSubmitModal={addAreas}
+         title={isAdding ? "Add Area" : "Edit Area"}
+         isShow={modalOpen}
+         handleCloseModal={closeModal}
+         handleSubmitModal={isAdding ? handleCreate : handleSave}
       >
         <>
           <small className="text-muted">
@@ -80,6 +225,7 @@ const Areas: NextPage = () => {
               <Form.Label>Area Name</Form.Label>
               <Form.Control
                 type="text"
+                value={areaName}
                 onChange={(e) => setAreaName(e.target.value)}
               />
               {isError && (
@@ -93,8 +239,9 @@ const Areas: NextPage = () => {
               <Row>
                 <Col>
                   <Form.Control
-                    type="text"
-                    onChange={(e) => setAreaSize(e.target.value)}
+                    type="number"
+                    value={areaSize}
+                    onChange={(e) => setAreaSize(Number(e.target.value))}
                   />
                   {isError && (
                     <Form.Text className="text-danger">
@@ -104,42 +251,38 @@ const Areas: NextPage = () => {
                 </Col>
                 <Col>
                   <Form.Select
-                    onChange={(e) => setAreaSizeUnit(e.target.value)}
+                  value={areaUnit}
+                    onChange={(e) => setAreaUnit(e.target.value)}
                   >
-                    <option value="Ha">Ha</option>
                     <option value="m2">m2</option>
+                    <option value="Ha">Ha</option>
                   </Form.Select>
                 </Col>
               </Row>
             </Form.Group>
             <Form.Group className="mb-3">
               <Row>
-                <Col xs={4}>
+                <Col xs={6}>
                   <Form.Label>Type</Form.Label>
-                  <Form.Select onChange={(e) => setAreaType(e.target.value)}>
-                    <option value="Seeding">Seeding</option>
-                    <option value="Growing">Growing</option>
+                  <Form.Select value={areaType} onChange={(e) => setAreaType(e.target.value)}>
+                    <option value="Tissue culture room">Tissue culture room</option>
+                    <option value="Tissue culture laboratory">Tissue culture laboratory</option>
                   </Form.Select>
                 </Col>
-                <Col xs={8}>
+                <Col xs={6}>
                   <Form.Label>Locations</Form.Label>
-                  <Form.Select
+                  <Form.Control
+                    type="text"
+                    value={areaLocations}
                     onChange={(e) => setAreaLocations(e.target.value)}
-                  >
-                    <option value="Field (Outdoor)">
-                      Field Outdoor (Outdoor)
-                    </option>
-                    <option value="Greenhouse (Indoor)">
-                      Greendhouse (Indoor)
-                    </option>
-                  </Form.Select>
+                  />
+                  {isError && (
+                    <Form.Text className="text-danger">
+                      The size location is required
+                    </Form.Text>
+                  )}
                 </Col>
               </Row>
-           
-              <Form.Label>
-                Select photo <small className="text-muted">(optional)</small>
-              </Form.Label>
-              <Form.Control type="file" />
             </Form.Group>
           </Form>
         </>

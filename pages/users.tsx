@@ -19,6 +19,8 @@ import Pagination from "@mui/lab/Pagination";
 import useSortData from "../src/hooks/useSortData";
 import usePagination from "../src/hooks/usePagination";
 
+import withRole from "@/middleware/withRole";
+
 import withAuth from "@/middleware/withAuth";
 import { useSelector } from "react-redux";
 import { selectAuthState } from "@/store/auth";
@@ -30,32 +32,40 @@ import apiClient from "@/services/apiClient";
 import useModal from "../src/hooks/useModal";
 
 import ConfirmModal from "@/components/ConfirmModal";
-const Plant: NextPage = () => {
+const Users: NextPage = () => {
   const resetFields = () => {
-    setPlantName("");
-    setScientificName("");
-    setPlantDescription("");
+    setUserName("");
+    setFullName("");
+    setPhoneNumber("");
+    setPassword("");
+    setEmail("");
+    setIsAdmin(false);
   };
   const { modalOpen, showModal, closeModal } = useModal(resetFields);
-  const [plantName, setPlantName] = useState("");
-  const [scientificName, setScientificName] = useState("");
-  const [plantDescription, setPlantDescription] = useState("");
+  const [userName, setUserName] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
 
-  interface IPlant {
-    Plant_ID: number;
-    Plant_Name: string;
-    Scientific_Name: string;
-    Plant_Description: string;
+  interface IUser {
+    User_ID: number;
+    User_Name: string;
+    Full_Name: string;
+    Phone_Number: string;
+    User_Password: string;
+    email: string;
+    Is_Admin: number;
   }
 
   const authState = useSelector(selectAuthState);
   const { accessToken } = authState;
 
-
-  const [Data, setData] = useState([]);
-  const fetchData = useCallback(async () => {
+  const [userData, setUserData] = useState([]);
+  const fetchUserData = useCallback(async () => {
     try {
-      const response = await apiClient.get("/plant", {
+      const response = await apiClient.get("/users/getAllUsers", {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
@@ -63,18 +73,18 @@ const Plant: NextPage = () => {
       });
 
       if (response.data.status) {
-        setData(response.data.result);
+        setUserData(response.data.users);
       } else {
-        console.error("Error fetching current plant: " + response.data.message);
+        console.error("Error fetching current user: " + response.data.message);
       }
     } catch (error) {
-      console.error("Error fetching current plant: " + error);
+      console.error("Error fetching current user: " + error);
     }
   }, [accessToken]);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchUserData();
+  }, [fetchUserData]);
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
@@ -91,9 +101,9 @@ const Plant: NextPage = () => {
 
   const handleDeleteItem = async (item: any) => {
     // call API to delete item
-    
+    // await apiClient.delete(`/users/deleteUser/${id}`);
     const response = await apiClient.delete(
-      `/plant/${item.Plant_ID}`,
+      `/users/deleteUser/${item.User_ID}`,
       {
         headers: {
           "Content-Type": "application/json",
@@ -103,40 +113,46 @@ const Plant: NextPage = () => {
     );
 
     // refresh data
-    fetchData();
+    fetchUserData();
     // close modal
     handleCloseConfirmModal();
     resetFields();
   };
 
   // EDIT USER
-  const [editing, setEditing] = useState<IPlant | null>(null);
+  const [editingUser, setEditingUser] = useState<IUser | null>(null);
 
-  const handleEdit = (Plant: IPlant) => {
-    setEditing(Plant);
+  const handleEditUser = (user: IUser) => {
+    setEditingUser(user);
 
     // Set the default values for the input fields
-    setPlantName(Plant.Plant_Name);
-    setScientificName(Plant.Scientific_Name);
-    setPlantDescription(Plant.Plant_Description);
+    setUserName(user.User_Name);
+    setFullName(user.Full_Name);
+    setPhoneNumber(user.Phone_Number);
+    setPassword(user.User_Password);
+    setEmail(user.email);
+    setIsAdmin(user.Is_Admin === 1);
 
-    setIsAdding(false);
+    setIsAddingUser(false);
     showModal();
   };
 
-  const handleSave = async () => {
-    if (!editing) {
-      console.error("No Plant selected for editing");
+  const handleSaveUser = async () => {
+    if (!editingUser) {
+      console.error("No user selected for editing");
       return;
     }
-    // Validate Plant input and call API to update Plant information
+    // Validate user input and call API to update user information
     try {
       const response = await apiClient.put(
-        `/Plant/${editing?.Plant_ID}`,
+        `/users/updateUserInfo/${editingUser?.User_ID}`,
         {
-          Plant_Name: plantName,
-    Scientific_Name: scientificName,
-    Plant_Description: plantDescription,
+          User_Name: userName,
+          Full_Name: fullName,
+          Phone_Number: phoneNumber,
+          User_Password: password,
+          email: email,
+          Is_Admin: isAdmin ? 1 : 0,
         },
         {
           headers: {
@@ -148,13 +164,13 @@ const Plant: NextPage = () => {
 
       if (response.data.status) {
         // Refresh user data
-        fetchData();
+        fetchUserData();
         console.log(response);
 
-        // Close modal and reset editing
+        // Close modal and reset editingUser
         closeModal();
         resetFields();
-        setEditing(null);
+        setEditingUser(null);
       } else {
         console.error("Error updating user: " + response.data.message);
       }
@@ -163,21 +179,24 @@ const Plant: NextPage = () => {
     }
   };
 
-  // ADD 
-  const [isAdding, setIsAdding] = useState(false);
-  const handleAdd = () => {
-    setIsAdding(true);
+  // ADD USER
+  const [isAddingUser, setIsAddingUser] = useState(false);
+  const handleAddUser = () => {
+    setIsAddingUser(true);
     showModal();
   };
-  const handleCreate = async () => {
+  const handleCreateUser = async () => {
     // Validate user input and call API to create a new user
     try {
       const response = await apiClient.post(
         "/users/createUser",
         {
-          Plant_Name: plantName,
-          Scientific_Name: scientificName,
-          Plant_Description: plantDescription,
+          User_Name: userName,
+          Full_Name: fullName,
+          Phone_Number: phoneNumber,
+          User_Password: password,
+          email: email,
+          Is_Admin: isAdmin ? 1 : 0,
         },
         {
           headers: {
@@ -189,13 +208,13 @@ const Plant: NextPage = () => {
 
       if (response.data.status) {
         // Refresh user data
-        fetchData();
+        fetchUserData();
         console.log(response);
 
-        // Close modal and reset editing
+        // Close modal and reset editingUser
         closeModal();
         resetFields();
-        setIsAdding(false);
+        setIsAddingUser(false);
       } else {
         console.error("Error creating user: " + response.data.message);
       }
@@ -207,7 +226,7 @@ const Plant: NextPage = () => {
   const itemsPerPage = 5;
 
   const { sortedData, requestSort, sortConfig, handleRequestSort } =
-    useSortData(Data);
+    useSortData(userData);
   const { paginatedData, totalPages, currentPage, handleChangePage } =
     usePagination(sortedData, itemsPerPage);
 
@@ -233,15 +252,15 @@ const Plant: NextPage = () => {
     <Layout>
       <Row>
         <Col>
-          <h3 className="pb-3">Plant</h3>
+          <h3 className="pb-3">User Management</h3>
         </Col>
       </Row>
       <Row>
         <Col>
           <ButtonIcon
-            label="Add plant"
+            label="Add user"
             icon={<FaPlus className="me-2" />}
-            onClick={handleAdd}
+            onClick={handleAddUser}
             variant="primary"
           />
         </Col>
@@ -251,53 +270,73 @@ const Plant: NextPage = () => {
           <StyledTableHead>
             <TableRow>
               <StyledTableCellWidth>#</StyledTableCellWidth>
-              <StyledTableCell onClick={() => handleRequestSort("plantName")}>
+              <StyledTableCell onClick={() => handleRequestSort("User_Name")}>
                 <TableSortLabel
-                  active={sortConfig.key === "plantName"}
+                  active={sortConfig.key === "User_Name"}
                   direction={sortConfig.direction}
-                  onClick={() => handleRequestSort("plantName")}
+                  onClick={() => handleRequestSort("User_Name")}
                 >
-                  Plant Name
+                  UserName
                 </TableSortLabel>
               </StyledTableCell>
-              <StyledTableCell onClick={() => handleRequestSort("scientificName")}>
+              <StyledTableCell onClick={() => handleRequestSort("Full_Name")}>
                 <TableSortLabel
-                  active={sortConfig.key === "scientificName"}
+                  active={sortConfig.key === "Full_Name"}
                   direction={sortConfig.direction}
-                  onClick={() => handleRequestSort("scientificName")}
+                  onClick={() => handleRequestSort("Full_Name")}
                 >
-                  Scientific Name
+                  Full name
                 </TableSortLabel>
               </StyledTableCell>
               <StyledTableCell
-                onClick={() => handleRequestSort("plantDescription")}
+                onClick={() => handleRequestSort("Phone_Number")}
               >
                 <TableSortLabel
-                  active={sortConfig.key === "plantDescription"}
+                  active={sortConfig.key === "Phone_Number"}
                   direction={sortConfig.direction}
-                  onClick={() => handleRequestSort("plantDescription")}
+                  onClick={() => handleRequestSort("Phone_Number")}
                 >
-                  Plant Description
+                  Phone Number
                 </TableSortLabel>
               </StyledTableCell>
-              
+              <StyledTableCell onClick={() => handleRequestSort("email")}>
+                <TableSortLabel
+                  active={sortConfig.key === "email"}
+                  direction={sortConfig.direction}
+                  onClick={() => handleRequestSort("email")}
+                >
+                  Email
+                </TableSortLabel>
+              </StyledTableCell>
+              <StyledTableCell onClick={() => handleRequestSort("Role")}>
+                <TableSortLabel
+                  active={sortConfig.key === "Role"}
+                  direction={sortConfig.direction}
+                  onClick={() => handleRequestSort("Role")}
+                >
+                  Role
+                </TableSortLabel>
+              </StyledTableCell>
               <StyledTableCell>Actions</StyledTableCell>
             </TableRow>
           </StyledTableHead>
           <TableBody>
             {paginatedData &&
               paginatedData.map((item, index) => (
-                <TableRow key={item.Plant_ID}>
+                <TableRow key={item.User_ID}>
                   <TableCell>
                     {(currentPage - 1) * itemsPerPage + index + 1}
                   </TableCell>
-                  <TableCell>{item.Plant_Name}</TableCell>
-                  <TableCell>{item.Scientific_Name}</TableCell>
-                  <TableCell>{item.Plant_Description}</TableCell>
-                  
+                  <TableCell>{item.User_Name}</TableCell>
+                  <TableCell>{item.Full_Name}</TableCell>
+                  <TableCell>{item.Phone_Number}</TableCell>
+                  <TableCell>{item.email}</TableCell>
+                  <TableCell>
+                    {item.Is_Admin === 1 ? "Manager" : "Employee"}
+                  </TableCell>
                   <TableCell>
                     <EditIcon
-                      onClick={() => handleEdit(item as IPlant)}
+                      onClick={() => handleEditUser(item as IUser)}
                       className="show-pointer text-secondary icon-bordered icon-spacing"
                     />
                     <DeleteIcon
@@ -319,41 +358,66 @@ const Plant: NextPage = () => {
       </div>
 
       <ModalContainer
-        title={isAdding ? "Add Plant" : "Edit Plant"}
+        title={isAddingUser ? "Add User" : "Edit User"}
         isShow={modalOpen}
         handleCloseModal={closeModal}
-        handleSubmitModal={isAdding ? handleCreate : handleSave}
+        handleSubmitModal={isAddingUser ? handleCreateUser : handleSaveUser}
       >
         <>
           <Form>
-            <Form.Group controlId="plantName">
-              <Form.Label>Plant Name</Form.Label>
+            <Form.Group controlId="userName">
+              <Form.Label>Username</Form.Label>
               <Form.Control
                 type="text"
-                placeholder="Enter Plant Name"
-                value={plantName}
-                onChange={(e) => setPlantName(e.target.value)}
+                placeholder="Enter username"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
               />
             </Form.Group>
-            <Form.Group controlId="scientificName">
-              <Form.Label>Scientitfic Name</Form.Label>
+            <Form.Group controlId="fullName">
+              <Form.Label>Full Name</Form.Label>
               <Form.Control
                 type="text"
-                placeholder="Enter Scientitfic Name"
-                value={scientificName}
-                onChange={(e) => setScientificName(e.target.value)}
+                placeholder="Enter full name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
               />
             </Form.Group>
-            <Form.Group controlId="plantDescription">
-              <Form.Label>Plant Description</Form.Label>
+            <Form.Group controlId="phoneNumber">
+              <Form.Label>Phone Number</Form.Label>
               <Form.Control
                 type="text"
-                placeholder="Enter Plant Description"
-                value={plantDescription}
-                onChange={(e) => setScientificName(e.target.value)}
+                placeholder="Enter phone number"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
               />
             </Form.Group>
-
+            <Form.Group controlId="password">
+              <Form.Label>Password</Form.Label>
+              <Form.Control
+                type="password"
+                placeholder="Enter password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group controlId="email">
+              <Form.Label>Email</Form.Label>
+              <Form.Control
+                type="email"
+                placeholder="Enter email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </Form.Group>
+            <Form.Group controlId="isAdmin">
+              <Form.Check
+                type="checkbox"
+                label="Is Admin"
+                checked={isAdmin}
+                onChange={(e) => setIsAdmin(e.target.checked)}
+              />
+            </Form.Group>
           </Form>
         </>
       </ModalContainer>
@@ -370,4 +434,4 @@ const Plant: NextPage = () => {
   );
 };
 
-export default withAuth(Plant);
+export default withAuth(withRole([1])(Users));

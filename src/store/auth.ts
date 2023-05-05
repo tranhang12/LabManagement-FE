@@ -19,17 +19,17 @@ interface AuthState {
 }
 
 const initialState: AuthState = {
-  isLoggedIn: false,
+  isLoggedIn: !!Cookies.get('accessToken'),
   user: undefined,
   accessToken: Cookies.get('accessToken') ?? undefined,
 };
 
 export const login = createAsyncThunk(
-    'auth/login',
-    async (credentials: { userName: string; password: string }, { rejectWithValue }) => {
-      try {
+  'auth/login',
+  async (credentials: { userName: string; password: string }, { rejectWithValue }) => {
+    try {
       const response = await apiClient.post<{ status: boolean; message: string; user?: User; accessToken?: string }>(
-        '/login',
+        '/users/login',
         {
           userName: credentials.userName,
           password: credentials.password,
@@ -48,14 +48,17 @@ export const login = createAsyncThunk(
         Cookies.set('user', JSON.stringify(decodedToken.user));
         Cookies.set('accessToken', data.accessToken || '');
         return { user: data.user!, accessToken: data.accessToken! };
-    } else {
+      } else {
+        // Reject with the error message from the API response
         return rejectWithValue(data.message);
       }
     } catch (error: any) {
-      return rejectWithValue(error.message);
+      // Reject with a generic error message
+      return rejectWithValue("An error occurred while logging in. Please try again.");
     }
-  }
+}
 );
+
 
 const authSlice = createSlice({
   name: 'auth',
@@ -65,6 +68,7 @@ const authSlice = createSlice({
       state.isLoggedIn = false;
       state.user = undefined;
       state.accessToken = undefined;
+      Cookies.remove('accessToken');
     },
   },
   extraReducers: (builder) => {

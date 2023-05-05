@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev -p 3001",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 3001",
     "lint": "next lint"
   },
   "dependencies": {
@@ -35,14 +35,19 @@
     "react-redux": "^8.0.5",
     "redux": "^4.2.1",
     "redux-thunk": "^2.4.2",
-    "sass": "^1.57.1"
+    "sass": "^1.57.1",
+    "socket.io-client": "^4.6.1"
   },
   "devDependencies": {
+    "@babel/core": "^7.21.8",
+    "@babel/preset-env": "^7.21.5",
+    "@babel/preset-react": "^7.18.6",
     "@types/js-cookie": "^3.0.3",
     "@types/node": "^18.15.11",
     "@types/react": "^18.0.26",
-    "eslint": "8.31.0",
-    "eslint-config-next": "^13.1.1",
+    "babel-eslint": "^10.1.0",
+    "eslint": "^8.31.0",
+    "eslint-config-next": "^13.3.4",
     "eslint-config-prettier": "^8.6.0",
     "typescript": "^4.9.4"
   }

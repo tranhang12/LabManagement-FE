@@ -1,13 +1,44 @@
+import { useState, useEffect } from "react";
 import type { NextPage } from "next";
 import Link from "next/link";
 import { Col, Form, Nav, Row, Table } from "react-bootstrap";
+import withAuth from "@/middleware/withAuth";
 
 import Layout from "components/Layout";
 import Panel from "components/Panel";
-import TableTaskItem from "components/TableTaskItem";
-import { dashboardData, cropsData, tasksData } from "@/data/index";
+import { dashboardData } from "@/data/index";
+import apiClient from "@/services/apiClient";
 
 const Root: NextPage = () => {
+  const [counts, setCounts] = useState({
+    areaCount: 0,
+    culturePlanCount: 0,
+    tasksCount: 0,
+  });
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await apiClient.get("/recordCounts");
+        setCounts(response.data);
+      } catch (error) {
+        console.error("Error fetching data", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+  const displayCount = (name: string) => {
+    if (name === "Areas") {
+      return counts.areaCount || 0;
+    } else if (name === "Varieties") {
+      return counts.culturePlanCount || 0;
+    } else if (name === "Tasks") {
+      return counts.tasksCount || 0;
+    }
+    return 0;
+  };
+  
   return (
     <Layout>
       <Row>
@@ -16,97 +47,23 @@ const Root: NextPage = () => {
         </Col>
       </Row>
       <Row>
-        <Panel
-          title="In a nutshell"
-          md={6}
-          lg={6}
-        >
+        <Panel title="In a nutshell" md={6} lg={6}>
           <Nav className="flex-column">
-            {dashboardData.map(({ name, route, icon }) => (
+            {dashboardData.map(({ name, route, icon }, index) => (
               <Nav.Item key={name} className="mb-1">
                 <div className="d-flex align-items-center">
                   {icon}
-                  <Link href={route}>{name}</Link>
+                  <Link href={route}>
+                  {displayCount(name)} {name}
+                  </Link>
                 </div>
               </Nav.Item>
             ))}
           </Nav>
-        </Panel>
-        <Panel title="What is on Production" md={6} lg={6}>
-          <>
-            <div className="mb-3">
-              <Link href="/crops">See all Crops</Link>
-            </div>
-            <Table responsive>
-              <thead>
-                <tr>
-                  <th>Varieties</th>
-                  <th>Quantity</th>
-                  <th>Remaining days</th>
-                </tr>
-              </thead>
-              <tbody>
-                {cropsData &&
-                  cropsData.map(({ id, varieties, qty, day }) => (
-                    <tr key={id}>
-                      <td>
-                        <Link href={`/crops/${id}`}>{varieties}</Link>
-                      </td>
-                      <td>{qty}</td>
-                      <td>{day} days</td>
-                    </tr>
-                  ))}
-              </tbody>
-            </Table>
-          </>
-        </Panel>
-      </Row>
-      <Row>
-        <Panel title="Tasks">
-          <>
-            <div className="mb-3">
-              <Link href="/tasks">See all Tasks</Link>
-            </div>
-            <Table responsive>
-              <thead>
-                <tr>
-                  <th />
-                  <th className="w-75">Items</th>
-                  <th>Category</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tasksData &&
-                  tasksData.map(
-                    ({ id, item, details, dueDate, priority, category }) => (
-                      <tr key={id}>
-                        <td>
-                          <Form>
-                            <Form.Check type="checkbox" />
-                          </Form>
-                        </td>
-                        <td>
-                          <TableTaskItem
-                            id={id}
-                            item={item}
-                            details={details}
-                            dueDate={dueDate}
-                            priority={priority}
-                          />
-                        </td>
-                        <td>
-                          <span className="text-uppercase">{category}</span>
-                        </td>
-                      </tr>
-                    )
-                  )}
-              </tbody>
-            </Table>
-          </>
         </Panel>
       </Row>
     </Layout>
   );
 };
 
-export default Root;
+export default withAuth(Root);

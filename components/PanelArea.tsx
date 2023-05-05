@@ -8,7 +8,7 @@ interface iPanelArea {
   type: string;
   size: number;
   unit: string;
-  batches: number;
+  location: string
   quantity: number;
   edit: boolean;
   onClick: () => void;
@@ -20,7 +20,7 @@ const PanelArea = ({
   type,
   size,
   unit,
-  batches,
+  location,
   quantity,
   edit,
   onClick,
@@ -46,17 +46,17 @@ const PanelArea = ({
         </Card.Title>
         <small className="text-muted">{type}</small>
         <Row className="mt-3">
-          <Col xs={4}>
+          <Col xs={3}>
             <small className="text-muted">{`Size ${unit}`}</small>
             <br />
             {size}
           </Col>
-          <Col xs={4}>
-            <small className="text-muted">Batches</small>
+          <Col xs={6}>
+            <small className="text-muted">Location</small>
             <br />
-            {batches}
+            {location}
           </Col>
-          <Col xs={4}>
+          <Col xs={3}>
             <small className="text-muted">Quantity</small>
             <br />
             {quantity}

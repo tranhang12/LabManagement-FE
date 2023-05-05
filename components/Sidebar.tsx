@@ -2,12 +2,18 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { Col, Nav } from "react-bootstrap";
-
+import { useSelector } from 'react-redux';
+import { selectAuthState } from '@/store/auth';
 import iNavData from "@/types/iNavData";
-import { navData } from "@/data/index";
+import { adminNavData, userNavData } from "@/data/index";
 
 const Sidebar = (): JSX.Element => {
   const router = useRouter();
+  const authState = useSelector(selectAuthState);
+
+  const userRole = authState.user?.Is_Admin;
+  const displayNavData = userRole === 1 ? adminNavData : userNavData;
+
   return (
     <Col md={3} lg={2} className="bg-sidebar d-none d-md-block px-0 min-vh-100">
       <aside>
@@ -17,8 +23,8 @@ const Sidebar = (): JSX.Element => {
               <Image alt="LabOne logo" src={"/img/LabOne_logo.png"} width={110} height={110} />
             </div>
           </Nav.Link>
-          {navData &&
-            navData.map(({ name, route, icon }: iNavData) => (
+          {displayNavData  &&
+            displayNavData.map(({ name, route, icon }: iNavData) => (
               <Nav.Item key={name}>
                 <Link href={route} passHref legacyBehavior>
                 <Nav.Link className="nav-link text-light">

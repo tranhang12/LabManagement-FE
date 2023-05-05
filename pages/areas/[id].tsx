@@ -34,15 +34,6 @@ const ReservoirDetail: NextPage = () => {
   const [isError, setIsError] = useState(false);
   const target = useRef(null);
 
-  const addTaskReservoir = () => {
-    if (!dueDate || !priority || !title) {
-      setIsError(true);
-    } else {
-      setIsError(false);
-      closeModal();
-    }
-  };
-
   return (
     <Layout>
       <Row>
@@ -61,13 +52,7 @@ const ReservoirDetail: NextPage = () => {
             onClick={showModal}
             variant="primary"
           />
-          <ButtonIcon
-            label="Watering"
-            icon={<FaTint className="me-2" />}
-            onClick={() => {}}
-            variant="secondary"
-            textColor="text-light"
-          />
+          
         </Col>
       </Row>
       <Row>
@@ -110,7 +95,7 @@ const ReservoirDetail: NextPage = () => {
                 <th>Seeding Date</th>
                 <th>Days Since Seeding</th>
                 <th>Quantity</th>
-                <th>Last Watering</th>
+               
               </tr>
             </thead>
             <tbody>
@@ -124,7 +109,6 @@ const ReservoirDetail: NextPage = () => {
                     daysSinceSeeding,
                     qty,
                     qtyUnit,
-                    lastWatering,
                   }) => (
                     <tr key={id}>
                       <td>
@@ -134,7 +118,6 @@ const ReservoirDetail: NextPage = () => {
                       <td>{seedingDate}</td>
                       <td>{daysSinceSeeding}</td>
                       <td>{`${qty} ${qtyUnit}`}</td>
-                      <td>{lastWatering}</td>
                     </tr>
                   )
                 )}
@@ -207,7 +190,7 @@ const ReservoirDetail: NextPage = () => {
         title="Area: Add New Task on Organic Lettuce"
         isShow={modalOpen}
         handleCloseModal={closeModal}
-        handleSubmitModal={addTaskReservoir}
+        handleSubmitModal={}
       >
         <>
           <Form>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import type { NextPage } from "next";
 import { Col, Form, InputGroup, Row } from "react-bootstrap";
 import { FaPlus } from "react-icons/fa";
@@ -19,53 +19,243 @@ import Pagination from "@mui/lab/Pagination";
 import useSortData from "../src/hooks/useSortData";
 import usePagination from "../src/hooks/usePagination";
 
+import withRole from "@/middleware/withRole";
+
+import withAuth from "@/middleware/withAuth";
+import { useSelector } from "react-redux";
+import { selectAuthState } from "@/store/auth";
+
 import ButtonIcon from "../components/ButtonIcon";
 import ModalContainer from "../components/ModalContainer";
 import Layout from "../components/Layout";
 import apiClient from "@/services/apiClient";
 import useModal from "../src/hooks/useModal";
 
+import ConfirmModal from "@/components/ConfirmModal";
+
 const Material: NextPage = () => {
-  const { modalOpen, showModal, closeModal } = useModal();
-  const [materialCategory, setMaterialCategory] = useState("");
-  const [materialName, setMaterialName] = useState("");
-  const [quantity, setQuantity] = useState("");
+
+  const resetFields = () => {
+    setCategory("");
+    setName("");
+    setQuantity(0);
+    setProduced_By("");
+    setUnit("");
+    setExpiration_Date("");
+    setAdditional_Notes("");
+  };
+  const { modalOpen, showModal, closeModal } = useModal(resetFields);
+  const [Category, setCategory] = useState("");
+  const [Name, setName] = useState("");
+  const [Quantity, setQuantity] = useState(0);
   const [Produced_By, setProduced_By] = useState("");
-  const [priceUnit, setPriceUnit] = useState("");
-  const [expirationDate, setExpirationDate] = useState("");
-  const [notes, setNotes] = useState("");
+  const [Price, setPrice] = useState(0);
+  const [Unit, setUnit] = useState("");
+  const [Expiration_Date, setExpiration_Date] = useState("");
+  const [Additional_Notes, setAdditional_Notes] = useState("");
   const [isError, setIsError] = useState(false);
 
-  //fetch data
-  const [materials, setMaterials] = useState([]);
+  const validateInput = () => {
+    if (!Name || !Produced_By || !Quantity || !Unit || !Expiration_Date) {
+      setIsError(true);
+      return false;
+    }
+    setIsError(false);
+    return true;
+  };
+
+  interface IMaterial {
+    Material_ID: number;
+    Category: string;
+    Name: string;
+    Price: number;
+    Produced_By: string;
+    Quantity: number;
+    Additional_Notes: string;
+    Unit: string;
+    Expiration_Date: string;
+  }
+
+  const authState = useSelector(selectAuthState);
+  const { accessToken } = authState;
+
+  const [MaterialData, setMaterialData] = useState([]);
+  const fetchMaterialData = useCallback(async () => {
+    try {
+      const response = await apiClient.get("/material/getAllMaterial", {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (response.data.status) {
+        setMaterialData(response.data.result);
+      } else {
+        console.error("Error fetching Material: " + response.data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching Material: " + error);
+    }
+  }, [accessToken]);
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const response = await apiClient.get("/material");
-        setMaterials(response.data.result);
-        console.log(response.data.result);
-      } catch (error) {
-        console.error("Error fetching data:", error);
+    fetchMaterialData();
+  }, [fetchMaterialData]);
+
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<IMaterial | null>(null);
+
+  const handleShowConfirmModal = (item: IMaterial) => {
+    setItemToDelete(item);
+    setShowConfirmModal(true);
+  };
+
+  const handleCloseConfirmModal = () => {
+    setShowConfirmModal(false);
+    setItemToDelete(null);
+  };
+
+  const handleDeleteItem = async (item: IMaterial) => {
+    // call API to delete item
+    // await apiClient.delete(`/Materials/deleteMaterial/${id}`);
+    const response = await apiClient.delete(
+      `/material/deleteMaterial/${item.Material_ID}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
       }
+    );
+
+    // refresh data
+    fetchMaterialData();
+    // close modal
+    handleCloseConfirmModal();
+    resetFields();
+  };
+
+  // EDIT Material
+  const [editingMaterial, setEditingMaterial] = useState<IMaterial | null>(
+    null
+  );
+
+  const handleEditMaterial = (Material: IMaterial) => {
+    setIsAddingMaterial(false);
+    setEditingMaterial(Material);
+
+    // Set the default values for the input fields
+    setCategory(Material.Category);
+    setName(Material.Name);
+    setQuantity(Material.Quantity);
+    setProduced_By(Material.Produced_By);
+    setPrice(Material.Price);
+    setUnit(Material.Unit);
+
+    setExpiration_Date(Material.Expiration_Date);
+    setAdditional_Notes(Material.Additional_Notes);
+    showModal();
+  };
+
+  const handleSaveMaterial = async () => {
+    if (!editingMaterial) {
+      console.error("No Material selected for editing");
+      return;
+    }
+    // Validate Material input and call API to update Material information
+    if (!validateInput()) {
+      console.error("Invalid Material input");
+      return;
     }
 
-    fetchData();
-  }, []);
-  // add new material
-  const addMaterial = () => {
-    if (!materialName) {
-      setIsError(true);
-    } else {
-      setIsError(false);
-      closeModal();
+    try {
+      const response = await apiClient.put(
+        `/material/updateMaterial/${editingMaterial?.Material_ID}`,
+        {
+          Category: Category,
+          Name: Name,
+          Price: Price,
+          Produced_By: Produced_By,
+          Quantity: Quantity,
+          Additional_Notes: Additional_Notes,
+          Unit: Unit,
+          Expiration_Date: Expiration_Date,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      if (response.data.status) {
+        // Refresh Material data
+        fetchMaterialData();
+        console.log(response);
+
+        // Close modal and reset editingMaterial
+        closeModal();
+        resetFields();
+        setEditingMaterial(null);
+      } else {
+        console.error("Error updating Material: " + response.data.message);
+      }
+    } catch (error) {
+      console.error("Error updating Material: " + error);
+    }
+  };
+
+  // ADD Material
+  const [isAddingMaterial, setIsAddingMaterial] = useState(false);
+  const handleAddMaterial = () => {
+    setIsAddingMaterial(true);
+    showModal();
+  };
+  const handleCreateMaterial = async () => {
+    try {
+      const response = await apiClient.post(
+        "/material/addMaterial",
+        {
+          Category: Category,
+          Name: Name,
+          Price: Price,
+          Produced_By: Produced_By,
+          Quantity: Quantity,
+          Additional_Notes: Additional_Notes,
+          Unit: Unit,
+          Expiration_Date: Expiration_Date,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      if (response.data.status) {
+        // Refresh Material data
+        fetchMaterialData();
+        // console.log(response);
+
+        // Close modal and reset editingMaterial
+        closeModal();
+        resetFields();
+        setIsAddingMaterial(false);
+      } else {
+        console.error("Error creating Material: " + response.data.message);
+      }
+    } catch (error) {
+      console.error("Error creating Material: " + error);
     }
   };
 
   const itemsPerPage = 10;
 
   const { sortedData, requestSort, sortConfig, handleRequestSort } =
-    useSortData(materials);
+    useSortData(MaterialData);
   const { paginatedData, totalPages, currentPage, handleChangePage } =
     usePagination(sortedData, itemsPerPage);
 
@@ -89,21 +279,20 @@ const Material: NextPage = () => {
     font-weight: bold;
     text-align: center;
   `;
- // css for note table
+  // css for note table
   const NotesTableCell = styled(TableCell)<{ showFull?: boolean }>`
     max-width: 100px;
     white-space: ${({ showFull }) => (showFull ? "normal" : "nowrap")};
     overflow: hidden;
     text-overflow: ellipsis;
   `;
-//css for setting width of id table
-const StyledTableCellWidth = styled(TableCell)`
-  width: 5px; 
-  color: white;
+  //css for setting width of id table
+  const StyledTableCellWidth = styled(TableCell)`
+    width: 5px;
+    color: white;
     font-weight: bold;
     text-align: center;
-`;
-
+  `;
 
   return (
     <Layout>
@@ -117,7 +306,7 @@ const StyledTableCellWidth = styled(TableCell)`
           <ButtonIcon
             label="Add Material"
             icon={<FaPlus className="me-2" />}
-            onClick={showModal}
+            onClick={handleAddMaterial}
             variant="primary"
           />
         </Col>
@@ -190,12 +379,12 @@ const StyledTableCellWidth = styled(TableCell)`
                 </TableSortLabel>
               </StyledTableCell>
               <StyledTableCell
-                onClick={() => handleRequestSort("expiration_date")}
+                onClick={() => handleRequestSort("Expiration_Date")}
               >
                 <TableSortLabel
-                  active={sortConfig.key === "expiration_date"}
+                  active={sortConfig.key === "Expiration_Date"}
                   direction={sortConfig.direction}
-                  onClick={() => handleRequestSort("expiration_date")}
+                  onClick={() => handleRequestSort("Expiration_Date")}
                 >
                   Expiration date
                 </TableSortLabel>
@@ -216,50 +405,38 @@ const StyledTableCellWidth = styled(TableCell)`
           </StyledTableHead>
           <TableBody>
             {paginatedData &&
-              paginatedData.map(
-                (
-                  {
-                    id,
-                    Category,
-                    Name,
-                    Price,
-                    Produced_By,
-                    Quantity,
-                    Unit,
-                    expiration_date,
-                    Additional_Notes,
-                  },
-                  index
-                ) => (
-                  
-                  <TableRow key={id}>
-                    <TableCell>{index + 1}</TableCell>
-                    <TableCell>{Category}</TableCell>
-                    <TableCell>{Name}</TableCell>
-                    <TableCell>${Price}</TableCell>
-                    <TableCell>{Produced_By}</TableCell>
-                    <TableCell>{Quantity}</TableCell>
-                    <TableCell>{Unit}</TableCell>
-                    <TableCell>{new Date(expiration_date).toLocaleDateString()}</TableCell>
-                    <NotesTableCell
-                      showFull={showFullNotes[id]}
-                      onClick={() => handleNotesClick(id)}
-                    >
-                      {Additional_Notes}
-                    </NotesTableCell>
-                    <TableCell>
-                      <EditIcon
-                        onClick={showModal}
-                        className="show-pointer text-secondary icon-bordered icon-spacing"
-                      />
-                      <DeleteIcon
-                        onClick={showModal}
-                        className="show-pointer text-danger icon-bordered"
-                      />
-                    </TableCell>
-                  </TableRow>
-                )
-              )}
+              paginatedData.map((item, index) => (
+                <TableRow key={item.Material_ID}>
+                  <TableCell>
+                    {(currentPage - 1) * itemsPerPage + index + 1}
+                  </TableCell>
+                  <TableCell>{item.Category}</TableCell>
+                  <TableCell>{item.Name}</TableCell>
+                  <TableCell>${item.Price}</TableCell>
+                  <TableCell>{item.Produced_By}</TableCell>
+                  <TableCell>{item.Quantity}</TableCell>
+                  <TableCell>{item.Unit}</TableCell>
+                  <TableCell>
+                    {new Date(item.Expiration_Date).toLocaleDateString()}
+                  </TableCell>
+                  <NotesTableCell
+                    showFull={showFullNotes[item.Material_ID]}
+                    onClick={() => handleNotesClick(item.Material_ID)}
+                  >
+                    {item.Additional_Notes}
+                  </NotesTableCell>
+                  <TableCell>
+                    <EditIcon
+                      onClick={() => handleEditMaterial(item as IMaterial)}
+                      className="show-pointer text-secondary icon-bordered icon-spacing"
+                    />
+                    <DeleteIcon
+                      onClick={() => handleShowConfirmModal(item as IMaterial)}
+                      className="show-pointer text-danger icon-bordered"
+                    />
+                  </TableCell>
+                </TableRow>
+              ))}
           </TableBody>
         </Table>
       </TableContainer>
@@ -272,36 +449,42 @@ const StyledTableCellWidth = styled(TableCell)`
       </div>
 
       <ModalContainer
-        title="Add Material to Inventory"
+        title={isAddingMaterial ? "Add Material to Inventory" : "Edit Material"}
         isShow={modalOpen}
         handleCloseModal={closeModal}
-        handleSubmitModal={addMaterial}
+        handleSubmitModal={
+          isAddingMaterial ? handleCreateMaterial : handleSaveMaterial
+        }
       >
         <>
           <small className="text-muted">
-          Materials can include buffering agents, supplements, antibiotics and antifungals, gelatin and agar, cell culture vessels, and equipment such as a laminar flow hood, CO2 incubator, centrifuge, and cell counter.
+            Materials can include buffering agents, supplements, antibiotics and
+            antifungals, gelatin and agar, cell culture vessels, and equipment
+            such as a laminar flow hood, CO2 incubator, centrifuge, and cell
+            counter.
           </small>
           <Form className="mt-3">
             <Form.Group className="mb-3">
               <Form.Label>Choose type of material</Form.Label>
               <Form.Select
-                onChange={(e) => setMaterialCategory(e.target.value)}
+                value={Category}
+                onChange={(e) => setCategory(e.target.value)}
               >
-                <option value="1">Seed</option>
-                <option value="2">Growing Medium</option>
-                <option value="3">Agrochemical</option>
-                <option value="4">Label and Crops Support</option>
-                <option value="5">Seeding Container</option>
-                <option value="6">Post Harvest Supply</option>
-                <option value="7">Plant</option>
-                <option value="8">Other Material</option>
+                <option value="Growing Medium">Growing Medium</option>
+                <option value="Agrochemical">Agrochemical</option>
+                <option value="Label and Crops Support">
+                  Label and Crops Support
+                </option>
+                <option value="Seeding Container">Seeding Container</option>
+                <option value="Post Harvest Supply">Post Harvest Supply</option>
               </Form.Select>
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Label>Variety Name</Form.Label>
               <Form.Control
                 type="text"
-                onChange={(e) => setMaterialName(e.target.value)}
+                value={Name}
+                onChange={(e) => setName(e.target.value)}
               />
               {isError && (
                 <Form.Text className="text-danger">
@@ -311,17 +494,11 @@ const StyledTableCellWidth = styled(TableCell)`
             </Form.Group>
             <Form.Group className="mb-3">
               <Row>
-                {/* <Col>
-                  <Form.Label>Plant Type</Form.Label>
-                  <Form.Control
-                    type="text"
-                    onChange={(e) => setPlantType(e.target.value)}
-                  />
-                </Col> */}
                 <Col>
                   <Form.Label>Produced by</Form.Label>
                   <Form.Control
                     type="text"
+                    value={Produced_By}
                     onChange={(e) => setProduced_By(e.target.value)}
                   />
                   {isError && (
@@ -332,41 +509,34 @@ const StyledTableCellWidth = styled(TableCell)`
                 </Col>
               </Row>
             </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Variety Name</Form.Label>
-              <Form.Control
-                type="text"
-                onChange={(e) => setMaterialName(e.target.value)}
-              />
-              {isError && (
-                <Form.Text className="text-danger">
-                  The name field is required
-                </Form.Text>
-              )}
-            </Form.Group>
+
             <Form.Group className="mb-3">
               <Row>
                 <Col>
                   <Form.Label>Quantity</Form.Label>
                   <Form.Control
-                    type="text"
-                    onChange={(e) => setQuantity(e.target.value)}
+                    type="number"
+                    value={Quantity}
+                    onChange={(e) => setQuantity(Number(e.target.value))}
                   />
                   {isError && (
                     <Form.Text className="text-danger">
-                      The quantity field is required
+                      The Quantity field is required
                     </Form.Text>
                   )}
                 </Col>
                 <Col>
                   <Form.Label>Unit</Form.Label>
                   <Form.Select
-                    onChange={(e) => setMaterialCategory(e.target.value)}
+                    value={Unit}
+                    onChange={(e) => setUnit(e.target.value)}
                   >
-                    <option value="1">Seeds</option>
-                    <option value="2">Packets</option>
-                    <option value="3">Gram</option>
-                    <option value="4">Kilogram</option>
+                    <option value="Packets">Packets</option>
+                    <option value="g">g</option>
+                    <option value="Kg">Kg</option>
+                    <option value="mL">mL</option>
+                    <option value="µg">µg</option>
+                    <option value="Item">Item</option>
                   </Form.Select>
                 </Col>
               </Row>
@@ -376,10 +546,11 @@ const StyledTableCellWidth = styled(TableCell)`
                 <Col>
                   <Form.Label>Price per Unit</Form.Label>
                   <InputGroup className="mb-2">
-                    <InputGroup.Text>€</InputGroup.Text>
+                    <InputGroup.Text>$</InputGroup.Text>
                     <Form.Control
-                      type="text"
-                      onChange={(e) => setPriceUnit(e.target.value)}
+                      type="number"
+                      value={Price}
+                      onChange={(e) => setPrice(Number(e.target.value))}
                     />
                   </InputGroup>
 
@@ -393,8 +564,10 @@ const StyledTableCellWidth = styled(TableCell)`
                   <Form.Label>Expiration date</Form.Label>
                   <Form.Control
                     type="date"
-                    onChange={(e) => setExpirationDate(e.target.value)}
-                    value={expirationDate}
+                    value={Expiration_Date}
+                    onChange={(e) =>
+                      setExpiration_Date(e.target.value)
+                    }
                   />
                   {isError && (
                     <Form.Text className="text-danger">
@@ -408,16 +581,26 @@ const StyledTableCellWidth = styled(TableCell)`
               <Form.Label>Additional Notes</Form.Label>
               <Form.Control
                 as="textarea"
-                onChange={(e) => setNotes(e.target.value)}
-                value={notes}
+                onChange={(e) => setAdditional_Notes(e.target.value)}
+                value={Additional_Notes}
                 style={{ height: "120px" }}
               />
             </Form.Group>
           </Form>
         </>
       </ModalContainer>
+
+      {/* render modal */}
+      {itemToDelete && (
+        <ConfirmModal
+          show={showConfirmModal}
+          handleClose={handleCloseConfirmModal}
+          handleConfirm={() => handleDeleteItem(itemToDelete)}
+          item={itemToDelete}
+        />
+      )}
     </Layout>
   );
 };
 
-export default Material;
+export default withAuth(Material);

@@ -11,18 +11,18 @@ import {
 import ScienceIcon from '@mui/icons-material/Science';
 const dashboardData = [
   {
-    name: "3 Areas",
+    name: "Areas",
     route: "/areas",
     icon: <FaGripHorizontal className="me-3" />,
   },
   {
-    name: "2 Varieties",
+    name: "Varieties",
     route: "/crops",
     icon: <FaLeaf className="me-3" />,
   },
   {
-    name: "5 Tasks",
-    route: "/materials",
+    name: "Tasks",
+    route: "/tasks",
     icon: <FaArchive className="me-3" />,
   },
 ];
@@ -88,61 +88,9 @@ const cultureData = [
   }
 ]
 
-const tasksData = [
-  {
-  id: 201,
-  item: "Schedule regular cleaning tasks.",
-  details:
-  "Ensure that all areas are cleaned on a regular basis, including floors, countertops, and equipment. Use appropriate cleaning solutions and follow proper procedures to maintain a sanitary environment. Dispose of waste materials properly and restock necessary supplies when needed.",
-  dueDate: "22/07/2021",
-  priority: "normal",
-  category: "sanitation",
-  },
-  {
-  id: 202,
-  item: "Perform equipment maintenance.",
-  details:
-  "Regularly inspect and maintain equipment to ensure it is in good working condition. Replace worn or damaged parts as needed and perform routine maintenance tasks according to the manufacturer's recommendations.",
-  dueDate: "22/07/2021",
-  priority: "normal",
-  category: "sanitation",
-  },
-  {
-  id: 203,
-  item: "Monitor water quality in the reservoir.",
-  details:
-  "Regularly test the water quality in the reservoir to ensure it meets required standards. Perform necessary treatments to maintain water quality and monitor for any potential issues or contaminants.",
-  dueDate: "20/07/2021",
-  priority: "normal",
-  category: "reservoir",
-  },
-  {
-  id: 204,
-  item: "Conduct safety inspections.",
-  details:
-  "Perform regular safety inspections of the facilities and equipment to identify and address any potential hazards. Ensure that all safety protocols are being followed and that employees are properly trained in emergency procedures.",
-  dueDate: "20/07/2021",
-  priority: "urgent",
-  category: "safety",
-  },
-  {
-  id: 205,
-  item: "Hold team meetings.",
-  details:
-  "Schedule regular team meetings to discuss ongoing projects, address any concerns, and plan for future tasks. Encourage open communication and collaboration among team members to ensure the smooth operation of the organization.",
-  dueDate: "30/03/2021",
-  priority: "normal",
-  category: "general",
-  },
-  ];
-  
-  
-  
-  
-  
-  ;
 
-const navData = [
+  //data for admin user
+const adminNavData = [
   {
     name: "Dashboard",
     route: "/",
@@ -185,10 +133,59 @@ const navData = [
   },
   {
     name: "Users",
+    route: "/users",
+    icon: <FaUser className="me-3" />,
+  },
+];
+//data for normal user
+const userNavData = [
+  {
+    name: "Dashboard",
+    route: "/",
+    icon: <FaHome className="me-3" />,
+  },
+  {
+    name: "Micropropagation",
+    route: "/micropropagation",
+    icon: <FaSeedling className="me-3" />,
+  },
+  {
+    name: "Areas",
+    route: "/areas",
+    icon: <FaGripHorizontal className="me-3" />,
+  },
+  {
+    name: "Materials",
+    route: "/materials",
+    icon: <FaArchive className="me-3" />,
+  },
+  {
+    name: "Crops",
+    route: "/crops",
+    icon: <FaLeaf className="me-3" />,
+  },
+  {
+    name: "Culture Medium",
+    route: "/cultureMediums",
+    icon: <ScienceIcon className="me-3" />,
+  },
+  {
+    name: "Plant",
+    route: "/plants",
+    icon: <FaTree className="me-3" />,
+  },
+  {
+    name: "Tasks",
+    route: "/tasks",
+    icon: <FaClipboard className="me-3" />,
+  },
+  {
+    name: "Account",
     route: "/account",
     icon: <FaUser className="me-3" />,
   },
 ];
+
 
 const notesData = [
   {
@@ -349,63 +346,15 @@ const micropropagationData = [
     additionalNotes: "",
   },
 ];
-const users = [
-	{
-		"User_ID" : 19,
-		"User_Name" : "tranhang12",
-		"User_Password" : "$2b$10$2EkuXuv3LCbT06SuwocUuu\/6GVAm1vLN97n7AjmX0ZZlJoRkMeBee",
-		"Full_Name" : "Tran Thi Hang",
-		"Phone_Number" : "09837812498",
-		"Is_Admin" : 1,
-		"email" : "tranhang12@gmail.com"
-	},
-	{
-		"User_ID" : 21,
-		"User_Name" : "tranhang123",
-		"User_Password" : "$2b$10$A3X0QGt1Gt85fxJbXKepLOXmNHEiAKCJSYeP4h1OeIupZ1nXPdi5q",
-		"Full_Name" : "Hang Tran",
-		"Phone_Number" : "0892374892",
-		"Is_Admin" : 0,
-		"email" : "tranhang13@gmail.com"
-	},
-	{
-		"User_ID" : 25,
-		"User_Name" : "caominh25",
-		"User_Password" : "$2b$10$nbupU97fA4BCC.kRG2u35eyCAiALu2AYtw0SVBgZiBd0t89w0Kw9e",
-		"Full_Name" : "Minh Cao",
-		"Phone_Number" : "09238497312",
-		"Is_Admin" : 1,
-		"email" : "tranhang14@gmail.com"
-	},
-	{
-		"User_ID" : 26,
-		"User_Name" : "MinMin123",
-		"User_Password" : "$2b$10$A4dUIqMiVyLZFa3FVgiULeHSDwWxokFSSFkxkTuq8\/l2UCUKjUBUq",
-		"Full_Name" : "Cao Minh",
-		"Phone_Number" : "0834897355",
-		"Is_Admin" : 1,
-		"email" : "tranhang15@gmail.com"
-	},
-	{
-		"User_ID" : 33,
-		"User_Name" : "Minmin12",
-		"User_Password" : "$2b$10$neMgpz4eFAaIiU0jHA.7weFIRGRC\/tF6bUn0tJpI8rSz.Gd8Rt5BG",
-		"Full_Name" : "Dương Ngọc Minh",
-		"Phone_Number" : "098236578124",
-		"Is_Admin" : 0,
-		"email" : "tranhang17@gmail.com"
-	},
 
-]
 export {
   dashboardData,
   cropsData,
-  tasksData,
-  navData,
+  adminNavData,
+  userNavData,
   notesData,
   areaData,
   materialData,
   micropropagationData,
-  users,
   cultureData
 };

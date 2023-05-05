@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import type { NextPage } from "next";
 import Link from "next/link";
 import {
@@ -27,20 +27,71 @@ import {
 import ButtonIcon from "../../components/ButtonIcon";
 import ModalContainer from "../../components/ModalContainer";
 import Panel from "../../components/Panel";
-import TableTaskItem from "../../components/TableTaskItem";
 import Layout from "../../components/Layout";
-import { tasksData, notesData } from "../../data";
 import useModal from "../../src/hooks/useModal";
+import { iTableTaskItem } from "../../components/TableTaskItem";
+import apiClient from "@/services/apiClient";
 
 const CropDetail: NextPage = () => {
-  const { modalOpen, showModal, closeModal } = useModal();
+  const resetFields = () => {
+    setSelectedCategory("");
+    setTitle("");
+    setPriority("");
+    setDueDate("");
+    setDesc("");
+  };
+  const { modalOpen, showModal, closeModal } = useModal(resetFields);
   const [dueDate, setDueDate] = useState("");
   const [priority, setPriority] = useState("");
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [isError, setIsError] = useState(false);
+  const [filterCategory, setFilterCategory] = useState("");
+  const [filterPriority, setFilterPriority] = useState("");
+  const [filter, setFilter] = useState("");
+  const [data, setData] = useState<iTableTaskItem | any>([]);
   const target = useRef(null);
+
+  ///Move Culture_plan
+  const [modalMoveOpen, setModalMoveOpen] = useState(false);
+  const [moveSource, setMoveSource] = useState("");
+  const [moveDest, setMoveDest] = useState("");
+  const [moveQty, setMoveQty] = useState(0);
+  const [remainingDays, setRemainingDays] = useState(0);
+  const [selectedCulturePlanID, setSelectedCulturePlanID] = useState(null); // Sử dụng state biến hoặc biến khác để lấy Culture_Plan_ID
+
+  const handleSubmit = async () => {
+    try {
+      const payload = {
+        Culture_Plan_ID: selectedCulturePlanID,
+        Area_Name: moveDest,
+        Initial_Quantity: moveQty,
+        Current_Quantity: moveQty,
+        Transition_Time: new Date().toISOString().split("T")[0],
+        Remaining_Days: remainingDays,
+      };
+
+      const response = await apiClient.post("/moveCrop", payload);
+
+      if (response.status === 201) {
+        alert("Crop moved successfully");
+        setModalMoveOpen(false);
+      } else {
+        alert("An error occurred while moving the crop");
+      }
+    } catch (error) {
+      alert("An error occurred while moving the crop");
+      console.error(error);
+    }
+  };
+
+  type Area = {
+    Area_Name: string;
+  };
+
+  const [areasWithCulturePlan, setAreasWithCulturePlan] = useState<Area[]>([]);
+  const [allAreas, setAllAreas] = useState<Area[]>([]);
 
   const addTask = () => {
     if (!dueDate || !priority || !title) {
@@ -60,10 +111,10 @@ const CropDetail: NextPage = () => {
   const [harvestNotes, setHarvestNotes] = useState("");
 
   // Move Modal
-  const [modalMoveOpen, setModalMoveOpen] = useState(false);
-  const [moveSource, setMoveSource] = useState("");
-  const [moveDest, setMoveDest] = useState("");
-  const [moveQty, setMoveQty] = useState(0);
+  // const [modalMoveOpen, setModalMoveOpen] = useState(false);
+  // const [moveSource, setMoveSource] = useState("");
+  // const [moveDest, setMoveDest] = useState("");
+  // const [moveQty, setMoveQty] = useState(0);
 
   // Dump Modal
   const [modalDumpOpen, setModalDumpOpen] = useState(false);
@@ -71,10 +122,29 @@ const CropDetail: NextPage = () => {
   const [dumpQty, setDumpQty] = useState(0);
   const [dumpNotes, setDumpNotes] = useState("");
 
-  // Take Picture Modal
-  const [modalPicOpen, setModalPicOpen] = useState(false);
-  const [pic, setPic] = useState("");
-  const [picNotes, setPicNotes] = useState("");
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await apiClient.get("/tasks/allTask");
+        const tasks = response.data.result;
+        setData(tasks);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, [filterCategory, filterPriority, filter]);
+
+  useEffect(() => {
+    fetch("/api/areas-with-culture-plan")
+      .then((res) => res.json())
+      .then((data) => setAreasWithCulturePlan(data));
+
+    fetch("/api/all-areas")
+      .then((res) => res.json())
+      .then((data) => setAllAreas(data));
+  }, []);
 
   return (
     <Layout>
@@ -174,39 +244,9 @@ const CropDetail: NextPage = () => {
                     />
                   </div>
                 </Col>
-                <Col className="mb-3">
-                  <div className="d-grid gap-2">
-                    <ButtonIcon
-                      label="Take Picture"
-                      icon={<FaCamera className="me-2" />}
-                      onClick={() => setModalPicOpen(true)}
-                      variant="light"
-                      isBlock
-                    />
-                  </div>
-                </Col>
               </Row>
-              {/* <h5 className="py-3">Activity</h5> */}
-              {/* <Card>
-                <Card.Body>
-                  <div className="d-flex">
-                    <div>
-                      <FaUtensilSpoon className="me-2" />
-                    </div>
-                    <div>
-                      <div>
-                        Seeded <strong>777 Pots</strong> of rom-24mar on{" "}
-                        <strong>Lab 01</strong>
-                      </div>
-                      <small className="mt-1 text-muted">
-                        24/03/2021 at 14:51
-                      </small>
-                    </div>
-                  </div>
-                </Card.Body>
-              </Card> */}
             </Tab>
-            <Tab eventKey="notes" title="Tasks &amp; Notes">
+            {/* <Tab eventKey="notes" title="Tasks &amp; Notes">
               <Row>
                 <Panel title="Tasks">
                   <>
@@ -219,49 +259,59 @@ const CropDetail: NextPage = () => {
                       />
                     </div>
                     <Table responsive>
-                      <thead>
-                        <tr>
-                          <th />
-                          <th className="w-75">Items</th>
-                          <th>Category</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {tasksData &&
-                          tasksData.map(
-                            ({
-                              id,
-                              item,
-                              details,
-                              dueDate,
-                              priority,
-                              category,
-                            }) => (
-                              <tr key={id}>
-                                <td>
-                                  <Form>
-                                    <Form.Check type="checkbox" />
-                                  </Form>
-                                </td>
-                                <td>
-                                  <TableTaskItem
-                                    id={id}
-                                    item={item}
-                                    details={details}
-                                    dueDate={dueDate}
-                                    priority={priority}
-                                  />
-                                </td>
-                                <td>
-                                  <span className="text-uppercase">
-                                    {category}
-                                  </span>
-                                </td>
-                              </tr>
-                            )
-                          )}
-                      </tbody>
-                    </Table>
+              <thead>
+                <tr>
+                  <th />
+                  <th className="w-60">Items</th>
+                  <th>Category</th>
+                  <th>Assigned to</th>
+                  <th />
+                </tr>
+              </thead>
+              <tbody>
+                {data &&
+                  data.map(
+                    ({
+                      id,
+                      Title,
+                      Description,
+                      Due_Date,
+                      Priority,
+                      Task_Category,
+                      Assigned_To
+                    }: iTableTaskItem) => (
+                      <tr key={id}>
+                        <td>
+                          <Form>
+                            <Form.Check type="checkbox" />
+                          </Form>
+                        </td>
+                        <td>
+                          <TableTaskItem
+                            id={id}
+                            Title={Title}
+                            Description={Description}
+                            Due_Date={Due_Date}
+                            Priority={Priority}
+                          />
+                        </td>
+                        <td>
+                          <span className="text-uppercase">{Task_Category}</span>
+                        </td>
+                        <td>
+                          <span className="text-uppercase">{Assigned_To}</span>
+                        </td>
+                        <td>
+                          <FaEdit
+                            onClick={showModal}
+                            className="show-pointer"
+                          />
+                        </td>
+                      </tr>
+                    )
+                  )}
+              </tbody>
+            </Table>
                   </>
                 </Panel>
                 <Panel title="Notes">
@@ -295,7 +345,7 @@ const CropDetail: NextPage = () => {
                   </>
                 </Panel>
               </Row>
-            </Tab>
+            </Tab> */}
           </Tabs>
         </Col>
       </Row>
@@ -363,16 +413,15 @@ const CropDetail: NextPage = () => {
                 The title field is required
               </Form.Text>
             )}
-
           </Form.Group>
           <Form.Group className="mb-3">
             <Form.Label>Assign to</Form.Label>
             <Form.Select onChange={(e) => setSelectedCategory(e.target.value)}>
               <option>Please select assignee</option>
-              <option value="1">Reservoir</option>
-              <option value="2">Pest Control</option>
-              <option value="3">Safety</option>
-              <option value="4">Sanitation</option>
+              <option value="Move">Move</option>
+              <option value="Harvest">Harvest</option>
+              <option value="Dump">Dump</option>
+              <option value="Other">Other</option>
             </Form.Select>
           </Form.Group>
           <Form.Group className="mb-3">
@@ -447,24 +496,28 @@ const CropDetail: NextPage = () => {
             <Form.Label>Select source area</Form.Label>
             <Form.Select onChange={(e) => setMoveSource(e.target.value)}>
               <option>Please select area</option>
-              <option value="1">Organic lettuce</option>
+              {areasWithCulturePlan.map((area) => (
+                <option key={area.Area_Name} value={area.Area_Name}>
+                  {area.Area_Name}
+                </option>
+              ))}
             </Form.Select>
+            <Form.Group className="mb-3">
+              <Form.Label>Select destination area</Form.Label>
+              <Form.Select onChange={(e) => setMoveDest(e.target.value)}>
+                <option>Please select area</option>
+                {allAreas.map((area) => (
+                  <option key={area.Area_Name} value={area.Area_Name}>
+                    {area.Area_Name}
+                  </option>
+                ))}
+              </Form.Select>
+            </Form.Group>
           </Form.Group>
           <Form.Group className="mb-3">
-            <Form.Label>Select destination area</Form.Label>
-            <Form.Select onChange={(e) => setMoveDest(e.target.value)}>
-              <option>Please select area</option>
-              <option value="1">Organic lettuce</option>
-              <option value="2">Organic chilli</option>
-            </Form.Select>
-          </Form.Group>
-          <Form.Group className="mb-3">
-            {/* <Form.Label>{`How many plants do you want to move? (${moveQty})`}</Form.Label> */}
+           
             <Form.Label>{`How many plants do you want to move?`}</Form.Label>
-            {/* <Form.Range
-              value={moveQty}
-              onChange={(e) => setMoveQty(Number(e.target.value))}
-            /> */}
+           
             <input
               type="text"
               value=""
@@ -530,36 +583,6 @@ const CropDetail: NextPage = () => {
               as="textarea"
               onChange={(e) => setDumpNotes(e.target.value)}
               value={dumpNotes}
-              style={{ height: "120px" }}
-            />
-          </Form.Group>
-        </Form>
-      </ModalContainer>
-
-      <ModalContainer
-        title="Take Picture"
-        isShow={modalPicOpen}
-        handleCloseModal={() => setModalPicOpen(false)}
-        handleSubmitModal={() => setModalPicOpen(false)}
-      >
-        <Form>
-          <Form.Group className="mb-3">
-            <Form.Label>Choose photo</Form.Label>
-            <Form.Control
-              type="file"
-              onChange={(e) => setPic(e.target.value)}
-            />
-          </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label>
-              Photo description
-              <br />
-              <small className="text-muted">(max. 200 char)</small>
-            </Form.Label>
-            <Form.Control
-              as="textarea"
-              onChange={(e) => setPicNotes(e.target.value)}
-              value={picNotes}
               style={{ height: "120px" }}
             />
           </Form.Group>

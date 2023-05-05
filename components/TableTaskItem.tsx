@@ -5,46 +5,38 @@ import { FaChevronDown } from "react-icons/fa";
 
 export interface iTableTaskItem {
   id: number;
-  item: string;
-  details: string;
-  dueDate: string;
-  priority: string;
-  category?: string;
+  Title: string;
+  Description: string;
+  Due_Date: string;
+  Priority: string;
+  Task_Category?: string;
+  Assigned_To?: string;
 }
 
 const TableTaskItem = ({
   id,
-  item,
-  details,
-  dueDate,
-  priority,
+  Title,
+  Description,
+  Due_Date,
+  Priority,
 }: iTableTaskItem): JSX.Element => {
   const [showDetail, setShowDetail] = useState(false);
   return (
     <>
       <div className="mb-3">
-        <Link href={`/tasks/${id}`}>{item}</Link>
+        <Link href={`/tasks/${id}`}>{Title}</Link>
         <br />
         <small className="d-flex align-items-center">
-          <a
-            onClick={() => setShowDetail(!showDetail)}
-            aria-controls={`task-item-${id}`}
-            className="lh-lg pe-auto text-black text-decoration-none"
-            style={{ cursor: "pointer" }}
-          >
-            Read Details
-            <FaChevronDown className="ms-1" />
-          </a>
         </small>
         <Collapse in={showDetail}>
-          <small id={`task-item-${id}`}>{details}</small>
+          <small id={`task-Title-${id}`}>{Description}</small>
         </Collapse>
       </div>
       <small className="text-muted">
-        {`Due date: ${dueDate}`}
+        {`Due date: ${Due_Date}`}
         <br />
         {"Priority: "}
-        <span className="text-uppercase">{priority}</span>
+        <span className="text-uppercase">{Priority}</span>
       </small>
     </>
   );
