@@ -14,8 +14,8 @@ const withAuth = (WrappedComponent: any) => {
         router.push('/auth/login');
       }
     }, [isLoggedIn, router]);
-
-    return <>{isLoggedIn && <WrappedComponent {...props} />}</>;
+    if (!isLoggedIn) return <></>
+    return <><WrappedComponent {...props} /></>;
   };
 
   return Wrapper;

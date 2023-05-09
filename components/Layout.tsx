@@ -15,11 +15,11 @@ import iNavData from "@/types/iNavData";
 import { adminNavData, userNavData } from "@/data/index";
 
 
-interface iLayout {
+interface ILayout {
   children: React.ReactNode;
 }
 
-const Layout = ({ children }: iLayout) => {
+const Layout = ({ children }: ILayout) => {
   const router = useRouter();
   const authState = useSelector(selectAuthState);
   const dispatch = useDispatch();
@@ -29,14 +29,15 @@ const Layout = ({ children }: iLayout) => {
 
    const handleSignOut = () => {
     // Clear the session data from cookies
-  Cookies.remove('accessToken');
-  
-  // Dispatch an action to clear the session state in the store
-  dispatch(logoutSuccess());
+    Cookies.remove('accessToken');
+    
+    // Dispatch an action to clear the session state in the store
+    dispatch(logoutSuccess());
 
-  // Redirect the user to the login page
-  router.push('/auth/login');
+    // Redirect the user to the login page
+    router.push('/auth/login');
   };
+  
   return (
     <Row className="mx-0">
       <Sidebar />

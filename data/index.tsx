@@ -29,7 +29,7 @@ const dashboardData = [
 
 const cropsData = [
   {
-    id: 101,
+    id: 6,
     varieties: "Asparagus plant",
     batchId: "As-20mar",
     seedingDate: "01/04/2023",
@@ -44,7 +44,7 @@ const cropsData = [
     dumped: 0,
   },
   {
-    id: 102,
+    id: 55,
     varieties: "Aloe vera plant",
     batchId: "Al-24mar",
     seedingDate: "15/04/2023",

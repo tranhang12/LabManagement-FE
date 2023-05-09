@@ -31,6 +31,8 @@ import Layout from "../../components/Layout";
 import useModal from "../../src/hooks/useModal";
 import { iTableTaskItem } from "../../components/TableTaskItem";
 import apiClient from "@/services/apiClient";
+import {toast} from 'react-toastify'
+import { useRouter } from "next/router";
 
 const CropDetail: NextPage = () => {
   const resetFields = () => {
@@ -59,30 +61,33 @@ const CropDetail: NextPage = () => {
   const [moveDest, setMoveDest] = useState("");
   const [moveQty, setMoveQty] = useState(0);
   const [remainingDays, setRemainingDays] = useState(0);
-  const [selectedCulturePlanID, setSelectedCulturePlanID] = useState(null); // Sử dụng state biến hoặc biến khác để lấy Culture_Plan_ID
+  // const [selectedCulturePlanID, setSelectedCulturePlanID] = useState(null); // Sử dụng state biến hoặc biến khác để lấy Culture_Plan_ID
+  const routes = useRouter()
+  const {id : selectedCulturePlanID} = routes.query
 
   const handleSubmit = async () => {
     try {
       const payload = {
-        Culture_Plan_ID: selectedCulturePlanID,
+        Culture_Plan_ID: +selectedCulturePlanID!,
         Area_Name: moveDest,
         Initial_Quantity: moveQty,
         Current_Quantity: moveQty,
         Transition_Time: new Date().toISOString().split("T")[0],
         Remaining_Days: remainingDays,
       };
-
       const response = await apiClient.post("/moveCrop", payload);
 
       if (response.status === 201) {
-        alert("Crop moved successfully");
-        setModalMoveOpen(false);
+        toast.success("Crop moved successfully");
+        
       } else {
-        alert("An error occurred while moving the crop");
+        toast.error("An error occurred while moving the crop")
       }
     } catch (error) {
-      alert("An error occurred while moving the crop");
+      toast.error("An error occurred while moving the crop")
       console.error(error);
+    } finally {
+      setModalMoveOpen(false);
     }
   };
 
@@ -137,13 +142,13 @@ const CropDetail: NextPage = () => {
   }, [filterCategory, filterPriority, filter]);
 
   useEffect(() => {
-    fetch("/api/areas-with-culture-plan")
-      .then((res) => res.json())
+    apiClient.get("/areas-with-culture-plan")
+      .then((res) => res.data)
       .then((data) => setAreasWithCulturePlan(data));
 
-    fetch("/api/all-areas")
-      .then((res) => res.json())
-      .then((data) => setAllAreas(data));
+    apiClient.get("/all-areas")
+    .then((res) => res.data)
+    .then((data) => setAllAreas(data));
   }, []);
 
   return (
@@ -489,7 +494,7 @@ const CropDetail: NextPage = () => {
         title="Move As-20mar"
         isShow={modalMoveOpen}
         handleCloseModal={() => setModalMoveOpen(false)}
-        handleSubmitModal={() => setModalMoveOpen(false)}
+        handleSubmitModal={handleSubmit}
       >
         <Form>
           <Form.Group className="mb-3">
@@ -519,8 +524,8 @@ const CropDetail: NextPage = () => {
             <Form.Label>{`How many plants do you want to move?`}</Form.Label>
            
             <input
-              type="text"
-              value=""
+              type="number"
+              defaultValue={0}
               onChange={(e) => setMoveQty(Number(e.target.value))}
               style={{
                 padding: "10px",
@@ -534,14 +539,14 @@ const CropDetail: NextPage = () => {
           </Form.Group>
           <Form.Group className="mb-3">
             {/* <Form.Label>{`How many plants do you want to move? (${moveQty})`}</Form.Label> */}
-            <Form.Label>{`Expected cell culture duration?`}</Form.Label>
+            <Form.Label>{`Expected cell culture duration? (days)`}</Form.Label>
             {/* <Form.Range
               value={moveQty}
               onChange={(e) => setMoveQty(Number(e.target.value))}
             /> */}
             <input
-              type="text"
-              value=""
+              type="number"
+              defaultValue={0}
               onChange={(e) => setMoveQty(Number(e.target.value))}
               style={{
                 padding: "10px",

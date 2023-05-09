@@ -55,11 +55,10 @@ const Areas: NextPage = () => {
           Authorization: `Bearer ${accessToken}`,
         },
       });
-
-      if (response.data.status) {
-        setAreaData(response.data.result);
+      if (response.status) {
+        setAreaData(response.data);
       } else {
-        console.error("Error fetching current area: " + response.data.message);
+        console.error("Error fetching current area: " + response.data?.message);
       }
     } catch (error) {
       console.error("Error fetching current area: " + error);
