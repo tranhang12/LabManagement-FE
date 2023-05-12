@@ -37,7 +37,7 @@ const Layout = ({ children }: ILayout) => {
     // Redirect the user to the login page
     router.push('/auth/login');
   };
-  
+  if (!children) return <></>
   return (
     <Row className="mx-0">
       <Sidebar />

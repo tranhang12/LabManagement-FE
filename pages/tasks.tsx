@@ -55,6 +55,18 @@ const Tasks: NextPage = () => {
     fetchData();
   }, [filterCategory, filterPriority, filter]);
 
+  //get user
+  type User = {
+    User_Name: string;
+    }
+    const [allUsers, setAllUsers] = useState<User[]>([]);
+      //get all users
+      useEffect(() => {
+        apiClient.get("users/getAllUsers")
+        .then((res) => res.data)
+        .then((data) => setAllUsers(data.users));
+      }, []);
+
   const addTask = () => {
     if (!dueDate || !priority || !title) {
       setIsError(true);
@@ -285,11 +297,11 @@ const Tasks: NextPage = () => {
               <Form.Select
                 onChange={(e) => setSelectedCategory(e.target.value)}
               >
-                <option>Please select assignee</option>
-                <option value="Move">Move</option>
-                <option value="Harvest">Harvest</option>
-                <option value="Dump">Dump</option>
-                <option value="Other">Other</option>
+                {allUsers.map((user) => (
+                <option key={user.User_Name} value={user.User_Name}>
+                  {user.User_Name}
+                </option>
+              ))}
               </Form.Select>
             </Form.Group>
             <Form.Group className="mb-3">

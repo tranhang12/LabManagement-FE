@@ -25,14 +25,17 @@ import {
 } from "react-icons/fa";
 
 import ButtonIcon from "../../components/ButtonIcon";
+import EditIcon from "@mui/icons-material/Edit";
 import ModalContainer from "../../components/ModalContainer";
 import Panel from "../../components/Panel";
 import Layout from "../../components/Layout";
 import useModal from "../../src/hooks/useModal";
-import { iTableTaskItem } from "../../components/TableTaskItem";
+import TableTaskItem, { iTableTaskItem } from "../../components/TableTaskItem";
 import apiClient from "@/services/apiClient";
-import {toast} from 'react-toastify'
+import { toast } from 'react-toastify'
 import { useRouter } from "next/router";
+import { selectAuthState } from "../../src/store/auth";
+import { useSelector } from "react-redux";
 
 const CropDetail: NextPage = () => {
   const resetFields = () => {
@@ -42,11 +45,13 @@ const CropDetail: NextPage = () => {
     setDueDate("");
     setDesc("");
   };
+  const { accessToken } = useSelector(selectAuthState);
   const { modalOpen, showModal, closeModal } = useModal(resetFields);
   const [dueDate, setDueDate] = useState("");
   const [priority, setPriority] = useState("");
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
+  const [assignedTo, setAssignedTo] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [isError, setIsError] = useState(false);
   const [filterCategory, setFilterCategory] = useState("");
@@ -61,6 +66,7 @@ const CropDetail: NextPage = () => {
   const [moveDest, setMoveDest] = useState("");
   const [moveQty, setMoveQty] = useState(0);
   const [remainingDays, setRemainingDays] = useState(0);
+  const [counter, setCounter] = useState(0)
   const routes = useRouter()
   interface ICrop {
     Culture_Plan_ID: number;
@@ -77,9 +83,22 @@ const CropDetail: NextPage = () => {
     Current_Quantity: string;
     Remaining_Days: string;
   }
+
+  //get user
+  type User = {
+    User_Name: string;
+  }
+  const [allUsers, setAllUsers] = useState<User[]>([]);
+  //get all users
+  useEffect(() => {
+    apiClient.get("users/getAllUsers")
+      .then((res) => res.data)
+      .then((data) => setAllUsers(data.users));
+  }, []);
+
   const [crop, setCrop] = useState<ICrop | null>(null)
-  
-  const {id : selectedCulturePlanID} = routes.query
+
+  const { id: selectedCulturePlanID } = routes.query
   useEffect(() => {
     if (selectedCulturePlanID) {
       apiClient.get(`/culturePlan/${selectedCulturePlanID}`)
@@ -89,31 +108,33 @@ const CropDetail: NextPage = () => {
     }
   }, [selectedCulturePlanID])
 
-  const handleSubmit = async () => {
+  const handleMoveSubmit = async () => {
     try {
       const payload = {
         Culture_Plan_ID: +selectedCulturePlanID!,
-        Area_Name: moveDest,
-        Initial_Quantity: moveQty,
-        Current_Quantity: moveQty,
+        Source_Area_Name: moveSource,
+        Destination_Area_Name: moveDest,
+        Quantity: moveQty,
         Transition_Time: new Date().toISOString().split("T")[0],
         Remaining_Days: remainingDays,
       };
-      const response = await apiClient.post("/moveCrop", payload);
-
-      if (response.status === 201) {
+      const response = await apiClient.post("/movedArea", payload);
+      if (response.status === 200) {
         toast.success("Crop moved successfully");
-        
+
       } else {
         toast.error("An error occurred while moving the crop")
       }
-    } catch (error) {
-      toast.error("An error occurred while moving the crop")
+    } catch (error: any) {
+
+      toast.error(error.response?.data?.message || "An error occurred while moving the crop")
       console.error(error);
     } finally {
+      setCounter(counter => counter + 1)
       setModalMoveOpen(false);
     }
   };
+
 
   type Area = {
     Area_Name: string;
@@ -122,23 +143,63 @@ const CropDetail: NextPage = () => {
   const [areasWithCulturePlan, setAreasWithCulturePlan] = useState<Area[]>([]);
   const [allAreas, setAllAreas] = useState<Area[]>([]);
 
-  const addTask = () => {
-    if (!dueDate || !priority || !title) {
+  const addTask = async () => {
+    if (!dueDate || !priority || !title || !assignedTo) {
       setIsError(true);
     } else {
-      setIsError(false);
-      closeModal();
+      try {
+        const response = await apiClient.post("/tasks/task", {
+          Culture_Plan_ID: +selectedCulturePlanID!,
+          Task_Category: selectedCategory,
+          Title: title,
+          Description: desc,
+          Priority: priority,
+          Due_Date: dueDate,
+          Assigned_To: assignedTo
+        }, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
+        closeModal();
+      } catch (err) {
+        setIsError(true);
+      }
     }
   };
 
   // Harvest Modal
   const [modalHarvestOpen, setModalHarvestOpen] = useState(false);
   const [harvestArea, setHarvestArea] = useState("");
-  const [harvestType, setHarvestType] = useState("");
+  const [harvestType, setHarvestType] = useState("0");
   const [harvestQty, setHarvestQty] = useState("");
-  const [harvestUnit, setHarvestUnit] = useState("");
   const [harvestNotes, setHarvestNotes] = useState("");
 
+  const handleHarvestSubmit = async () => {
+    try {
+      const payload = {
+        Culture_Plan_ID: +selectedCulturePlanID!,
+        Area_Name: harvestArea,
+        Harvest_Type: !(+harvestType) ? "all" : "partial",
+        Quantity: harvestQty,
+      };
+
+      const response = await apiClient.post("/harvestStorage", payload);
+
+      if (response.status === 200) {
+        toast.success("Crop harvested successfully");
+
+      } else {
+        toast.error("An error occurred while harvesting the crop")
+      }
+    } catch (error: any) {
+
+      toast.error(error.response?.data?.message || "An error occurred while harvesting the crop")
+    } finally {
+      setCounter(counter => counter + 1)
+      setModalHarvestOpen(false);
+    }
+  };
   // Move Modal
   // const [modalMoveOpen, setModalMoveOpen] = useState(false);
   // const [moveSource, setMoveSource] = useState("");
@@ -150,6 +211,33 @@ const CropDetail: NextPage = () => {
   const [dumpArea, setDumpArea] = useState("");
   const [dumpQty, setDumpQty] = useState(0);
   const [dumpNotes, setDumpNotes] = useState("");
+
+
+  const handleDumpSubmit = async () => {
+    try {
+      const payload = {
+        Culture_Plan_ID: +selectedCulturePlanID!,
+        Area_Name: dumpArea,
+        Quantity: dumpQty,
+      };
+
+      const response = await apiClient.post("/trash", payload);
+
+      if (response.status === 200) {
+        toast.success("Crop dumped successfully");
+
+      } else {
+        toast.error("An error occurred while dumping the crop")
+      }
+    } catch (error: any) {
+
+      toast.error(error.response?.data?.message || "An error occurred while dumping the crop")
+      console.error(error);
+    } finally {
+      setCounter(counter => counter + 1)
+      setModalDumpOpen(false);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -166,14 +254,18 @@ const CropDetail: NextPage = () => {
   }, [filterCategory, filterPriority, filter]);
 
   useEffect(() => {
-    apiClient.get("/areas-with-culture-plan")
+    apiClient.get("/areas-with-culture-plan", {
+      params: {
+        Culture_Plan_ID: selectedCulturePlanID
+      }
+    })
       .then((res) => res.data)
       .then((data) => setAreasWithCulturePlan(data));
 
     apiClient.get("/all-areas")
-    .then((res) => res.data)
-    .then((data) => setAllAreas(data));
-  }, []);
+      .then((res) => res.data)
+      .then((data) => setAllAreas(data));
+  }, [selectedCulturePlanID, counter]);
 
   return (
     <Layout>
@@ -183,7 +275,7 @@ const CropDetail: NextPage = () => {
             <ButtonIcon
               label="Back to Crops Batches"
               icon={<FaLongArrowAltLeft className="me-2" />}
-              onClick={() => {}}
+              onClick={() => { }}
               variant="link"
               textColor="#358a51"
             />
@@ -275,7 +367,7 @@ const CropDetail: NextPage = () => {
                 </Col>
               </Row>
             </Tab>
-            {/* <Tab eventKey="notes" title="Tasks &amp; Notes">
+            <Tab eventKey="notes" title="Tasks &amp; Notes">
               <Row>
                 <Panel title="Tasks">
                   <>
@@ -288,59 +380,59 @@ const CropDetail: NextPage = () => {
                       />
                     </div>
                     <Table responsive>
-              <thead>
-                <tr>
-                  <th />
-                  <th className="w-60">Items</th>
-                  <th>Category</th>
-                  <th>Assigned to</th>
-                  <th />
-                </tr>
-              </thead>
-              <tbody>
-                {data &&
-                  data.map(
-                    ({
-                      id,
-                      Title,
-                      Description,
-                      Due_Date,
-                      Priority,
-                      Task_Category,
-                      Assigned_To
-                    }: iTableTaskItem) => (
-                      <tr key={id}>
-                        <td>
-                          <Form>
-                            <Form.Check type="checkbox" />
-                          </Form>
-                        </td>
-                        <td>
-                          <TableTaskItem
-                            id={id}
-                            Title={Title}
-                            Description={Description}
-                            Due_Date={Due_Date}
-                            Priority={Priority}
-                          />
-                        </td>
-                        <td>
-                          <span className="text-uppercase">{Task_Category}</span>
-                        </td>
-                        <td>
-                          <span className="text-uppercase">{Assigned_To}</span>
-                        </td>
-                        <td>
-                          <FaEdit
-                            onClick={showModal}
-                            className="show-pointer"
-                          />
-                        </td>
-                      </tr>
-                    )
-                  )}
-              </tbody>
-            </Table>
+                      <thead>
+                        <tr>
+                          <th />
+                          <th className="w-60">Items</th>
+                          <th>Category</th>
+                          <th>Assigned to</th>
+                          <th />
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data &&
+                          data.map(
+                            ({
+                              id,
+                              Title,
+                              Description,
+                              Due_Date,
+                              Priority,
+                              Task_Category,
+                              Assigned_To
+                            }: iTableTaskItem) => (
+                              <tr key={id}>
+                                <td>
+                                  <Form>
+                                    <Form.Check type="checkbox" />
+                                  </Form>
+                                </td>
+                                <td>
+                                  <TableTaskItem
+                                    id={id}
+                                    Title={Title}
+                                    Description={Description}
+                                    Due_Date={Due_Date}
+                                    Priority={Priority}
+                                  />
+                                </td>
+                                <td>
+                                  <span className="text-uppercase">{Task_Category}</span>
+                                </td>
+                                <td>
+                                  <span className="text-uppercase">{Assigned_To}</span>
+                                </td>
+                                <td>
+                                  <EditIcon
+                                    onClick={showModal}
+                                    className="show-pointer"
+                                  />
+                                </td>
+                              </tr>
+                            )
+                          )}
+                      </tbody>
+                    </Table>
                   </>
                 </Panel>
                 <Panel title="Notes">
@@ -353,7 +445,7 @@ const CropDetail: NextPage = () => {
                         </div>
                       </Button>
                     </InputGroup>
-                    <ListGroup>
+                    {/* <ListGroup>
                       {notesData &&
                         notesData.map(({ id, title, createdOn }) => (
                           <ListGroup.Item key={id}>
@@ -370,16 +462,16 @@ const CropDetail: NextPage = () => {
                             </div>
                           </ListGroup.Item>
                         ))}
-                    </ListGroup>
+                    </ListGroup> */}
                   </>
                 </Panel>
               </Row>
-            </Tab> */}
+            </Tab>
           </Tabs>
         </Col>
       </Row>
       <ModalContainer
-        title="Crop: Add New Task from rom-24mar"
+        title={`Crop: Add New Task from ${crop?.BatchID}`}
         isShow={modalOpen}
         handleCloseModal={closeModal}
         handleSubmitModal={addTask}
@@ -424,10 +516,10 @@ const CropDetail: NextPage = () => {
             <Form.Label>Task Category</Form.Label>
             <Form.Select onChange={(e) => setSelectedCategory(e.target.value)}>
               <option>Please select category</option>
-              <option value="1">Reservoir</option>
-              <option value="2">Pest Control</option>
-              <option value="3">Safety</option>
-              <option value="4">Sanitation</option>
+              <option value="Move">Move</option>
+              <option value="Harvest">Harvest</option>
+              <option value="Dump">Dump</option>
+              <option value="Other">Other</option>
             </Form.Select>
           </Form.Group>
           <Form.Group className="mb-3">
@@ -445,12 +537,15 @@ const CropDetail: NextPage = () => {
           </Form.Group>
           <Form.Group className="mb-3">
             <Form.Label>Assign to</Form.Label>
-            <Form.Select onChange={(e) => setSelectedCategory(e.target.value)}>
-              <option>Please select assignee</option>
-              <option value="Move">Move</option>
-              <option value="Harvest">Harvest</option>
-              <option value="Dump">Dump</option>
-              <option value="Other">Other</option>
+            <Form.Select onChange={(e) => setAssignedTo(e.target.value)}>
+              <>
+                <option>Please select assignee</option>
+                {(allUsers || []).map((user) => (
+                  <option key={user.User_Name} value={user.User_Name}>
+                    {user.User_Name}
+                  </option>
+                ))}
+              </>
             </Form.Select>
           </Form.Group>
           <Form.Group className="mb-3">
@@ -466,42 +561,45 @@ const CropDetail: NextPage = () => {
       </ModalContainer>
 
       <ModalContainer
-        title="Harvest rom-24mar"
+        title={`Harvest ${crop?.BatchID}`}
         isShow={modalHarvestOpen}
         handleCloseModal={() => setModalHarvestOpen(false)}
-        handleSubmitModal={() => setModalHarvestOpen(false)}
+        handleSubmitModal={handleHarvestSubmit}
       >
         <Form>
           <Form.Group className="mb-3">
             <Form.Label>Choose area to be harvested</Form.Label>
             <Form.Select onChange={(e) => setHarvestArea(e.target.value)}>
               <option>Please select area</option>
-              <option value="1">Organic lettuce</option>
-              <option value="2">Organic chilli</option>
+              {areasWithCulturePlan.map((area) => (
+                <option key={area.Area_Name} value={area.Area_Name}>
+                  {area.Area_Name}
+                </option>
+              ))}
             </Form.Select>
           </Form.Group>
           <Form.Group className="mb-3">
             <Form.Label>Choose type of harvesting</Form.Label>
             <Form.Select onChange={(e) => setHarvestType(e.target.value)}>
-              <option>All</option>
+              <option value="0">All</option>
               <option value="1">Partial</option>
             </Form.Select>
           </Form.Group>
           <Form.Group className="mb-3">
             <Form.Label>Quantity</Form.Label>
             <Form.Control
-              type="input"
-              value={harvestQty}
+              type="number"
+              disabled={!(+harvestType)}
               onChange={(e) => setHarvestQty(e.target.value)}
             />
           </Form.Group>
-          <Form.Group className="mb-3">
+          {/* <Form.Group className="mb-3">
             <Form.Label>Units</Form.Label>
             <Form.Select onChange={(e) => setHarvestUnit(e.target.value)}>
               <option value="1">Grams</option>
               <option value="2">Kilograms</option>
             </Form.Select>
-          </Form.Group>
+          </Form.Group> */}
           <Form.Group className="mb-3">
             <Form.Label>Notes</Form.Label>
             <Form.Control
@@ -515,10 +613,10 @@ const CropDetail: NextPage = () => {
       </ModalContainer>
 
       <ModalContainer
-        title="Move As-20mar"
+        title={`Move ${crop?.BatchID}`}
         isShow={modalMoveOpen}
         handleCloseModal={() => setModalMoveOpen(false)}
-        handleSubmitModal={handleSubmit}
+        handleSubmitModal={handleMoveSubmit}
       >
         <Form>
           <Form.Group className="mb-3">
@@ -544,9 +642,9 @@ const CropDetail: NextPage = () => {
             </Form.Group>
           </Form.Group>
           <Form.Group className="mb-3">
-           
+
             <Form.Label>{`How many plants do you want to move?`}</Form.Label>
-           
+
             <input
               type="number"
               defaultValue={0}
@@ -589,21 +687,25 @@ const CropDetail: NextPage = () => {
         title="Dump rom-24mar"
         isShow={modalDumpOpen}
         handleCloseModal={() => setModalDumpOpen(false)}
-        handleSubmitModal={() => setModalDumpOpen(false)}
+        handleSubmitModal={handleDumpSubmit}
       >
         <Form>
           <Form.Group className="mb-3">
             <Form.Label>Choose area</Form.Label>
             <Form.Select onChange={(e) => setDumpArea(e.target.value)}>
               <option>Please select area</option>
-              <option value="1">Organic lettuce</option>
+              {areasWithCulturePlan.map((area) => (
+                <option key={area.Area_Name} value={area.Area_Name}>
+                  {area.Area_Name}
+                </option>
+              ))}
             </Form.Select>
           </Form.Group>
           <Form.Group className="mb-3">
-            <Form.Label>{`How many plants do you want to dump? (${dumpQty})`}</Form.Label>
-            <Form.Range
-              value={moveQty}
-              onChange={(e) => setDumpQty(Number(e.target.value))}
+            <Form.Label>{`How many plants do you want to dump?`}</Form.Label>
+            <Form.Control
+              type="number"
+              onChange={(e) => setDumpQty(+e.target.value)}
             />
           </Form.Group>
           <Form.Group className="mb-3">

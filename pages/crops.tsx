@@ -58,11 +58,11 @@ const Crops: NextPage = () => {
   const [currentQuantity, setCurrentQuantity] = useState("");
   const [remainingDays, setRemainingDays] = useState("");
   const [taskID, setTaskID] = useState(0);
-  const [createdDate, setCreatedDate] = useState("");
-    // get current date
-    const currentDate = new Date();
-    // format to YYYY-MM-DD
-    const formattedDate = currentDate.toISOString().substring(0, 10);
+  // get current date
+  const currentDate = new Date();
+  // format to YYYY-MM-DD
+  const formattedDate = currentDate.toISOString().substring(0, 10);
+  const [createdDate, setCreatedDate] = useState(formattedDate);
   const [isError, setIsError] = useState(false);
 
   const validateInput = () => {
@@ -260,14 +260,12 @@ const Crops: NextPage = () => {
         {
           Plant_Type: plantType,
           Area: area,
-          // Container_Quantity: containerQuantity,
           Container_Type: containerType,
+          Created_Date: createdDate,
           Transition_Time: transitionTime,
-          Task_ID: taskID,
           Status: status,
           Initial_Quantity: initialQuantity,
-          Current_Quantity: currentQuantity,
-          Remaining_Days: remainingDays,
+          Current_Quantity: initialQuantity,
         },
         {
           headers: {
@@ -534,7 +532,7 @@ const Crops: NextPage = () => {
                     </Form.Text>
                   )}
                 </Col>
-                <Col>
+                {/* <Col>
                 <Form.Label>Current Quantity</Form.Label>
                   <Form.Control
                     type="number"
@@ -546,7 +544,7 @@ const Crops: NextPage = () => {
                       The current quantity field is required
                     </Form.Text>
                   )}
-                </Col>
+                </Col> */}
               </Row>
             </Form.Group>
             <Form.Group className="mb-3">
