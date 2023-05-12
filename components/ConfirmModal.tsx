@@ -11,6 +11,7 @@ type ConfirmModalProps = {
         Name?: string
         Plant_Name?: string
         Culture_Medium_Name?: string
+        BatchID?: string
     };
   };
 
@@ -21,7 +22,7 @@ const ConfirmModal = ({ show, handleClose, handleConfirm, item}: ConfirmModalPro
         <Modal.Title>Confirm Delete</Modal.Title>
       </Modal.Header>
       <Modal.Body>
-        Are you sure you want to delete {item.User_Name || item.Name || item.Plant_Name || item.Culture_Medium_Name}?
+        Are you sure you want to delete {item.User_Name || item.Name || item.Plant_Name || item.Culture_Medium_Name|| item.BatchID}?
       </Modal.Body>
       <Modal.Footer>
         <Button variant="danger" onClick={handleClose}>

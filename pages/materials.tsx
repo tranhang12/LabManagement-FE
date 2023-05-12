@@ -34,11 +34,10 @@ import useModal from "../src/hooks/useModal";
 import ConfirmModal from "@/components/ConfirmModal";
 
 const Material: NextPage = () => {
-
   const resetFields = () => {
     setCategory("");
     setName("");
-    setQuantity(0);
+    setQuantity("");
     setProduced_By("");
     setUnit("");
     setExpiration_Date("");
@@ -47,9 +46,9 @@ const Material: NextPage = () => {
   const { modalOpen, showModal, closeModal } = useModal(resetFields);
   const [Category, setCategory] = useState("");
   const [Name, setName] = useState("");
-  const [Quantity, setQuantity] = useState(0);
+  const [Quantity, setQuantity] = useState("");
   const [Produced_By, setProduced_By] = useState("");
-  const [Price, setPrice] = useState(0);
+  const [Price, setPrice] = useState("");
   const [Unit, setUnit] = useState("");
   const [Expiration_Date, setExpiration_Date] = useState("");
   const [Additional_Notes, setAdditional_Notes] = useState("");
@@ -68,9 +67,9 @@ const Material: NextPage = () => {
     Material_ID: number;
     Category: string;
     Name: string;
-    Price: number;
+    Price: string;
     Produced_By: string;
-    Quantity: number;
+    Quantity: string;
     Additional_Notes: string;
     Unit: string;
     Expiration_Date: string;
@@ -315,15 +314,7 @@ const Material: NextPage = () => {
         <Table>
           <StyledTableHead>
             <TableRow>
-              <StyledTableCellWidth>
-                <TableSortLabel
-                  active={sortConfig.key === "index"}
-                  direction={sortConfig.direction}
-                  onClick={() => handleRequestSort("index")}
-                >
-                  ID
-                </TableSortLabel>
-              </StyledTableCellWidth>
+              <StyledTableCellWidth>#</StyledTableCellWidth>
               <StyledTableCell>
                 <TableSortLabel
                   active={sortConfig.key === "Category"}
@@ -517,7 +508,7 @@ const Material: NextPage = () => {
                   <Form.Control
                     type="number"
                     value={Quantity}
-                    onChange={(e) => setQuantity(Number(e.target.value))}
+                    onChange={(e) => setQuantity(e.target.value)}
                   />
                   {isError && (
                     <Form.Text className="text-danger">
@@ -550,7 +541,7 @@ const Material: NextPage = () => {
                     <Form.Control
                       type="number"
                       value={Price}
-                      onChange={(e) => setPrice(Number(e.target.value))}
+                      onChange={(e) => setPrice(e.target.value)}
                     />
                   </InputGroup>
 
@@ -565,9 +556,7 @@ const Material: NextPage = () => {
                   <Form.Control
                     type="date"
                     value={Expiration_Date}
-                    onChange={(e) =>
-                      setExpiration_Date(e.target.value)
-                    }
+                    onChange={(e) => setExpiration_Date(e.target.value)}
                   />
                   {isError && (
                     <Form.Text className="text-danger">
@@ -590,7 +579,6 @@ const Material: NextPage = () => {
         </>
       </ModalContainer>
 
-      {/* render modal */}
       {itemToDelete && (
         <ConfirmModal
           show={showConfirmModal}

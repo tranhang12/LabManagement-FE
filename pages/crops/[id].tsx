@@ -61,9 +61,33 @@ const CropDetail: NextPage = () => {
   const [moveDest, setMoveDest] = useState("");
   const [moveQty, setMoveQty] = useState(0);
   const [remainingDays, setRemainingDays] = useState(0);
-  // const [selectedCulturePlanID, setSelectedCulturePlanID] = useState(null); // Sử dụng state biến hoặc biến khác để lấy Culture_Plan_ID
   const routes = useRouter()
+  interface ICrop {
+    Culture_Plan_ID: number;
+    Plant_Type: string;
+    Area: string;
+    // Container_Quantity: number;
+    Container_Type: string;
+    Transition_Time: string;
+    BatchID: string;
+    Created_Date: string;
+    Task_ID: string;
+    Status: string;
+    Initial_Quantity: string;
+    Current_Quantity: string;
+    Remaining_Days: string;
+  }
+  const [crop, setCrop] = useState<ICrop | null>(null)
+  
   const {id : selectedCulturePlanID} = routes.query
+  useEffect(() => {
+    if (selectedCulturePlanID) {
+      apiClient.get(`/culturePlan/${selectedCulturePlanID}`)
+        .then(res => {
+          setCrop(res.data.result)
+        })
+    }
+  }, [selectedCulturePlanID])
 
   const handleSubmit = async () => {
     try {
@@ -170,18 +194,18 @@ const CropDetail: NextPage = () => {
         <Col>
           <Tabs defaultActiveKey="basic">
             <Tab eventKey="basic" title="Basic Info">
-              <h3 className="py-3">Asparagus plant</h3>
+              <h3 className="py-3">{crop?.Plant_Type}</h3>
               <Row>
                 <Col className="mb-3">
                   <small>Batch ID</small>
                   <div>
-                    <strong>As-20mar</strong>
+                    <strong>{crop?.BatchID}</strong>
                   </div>
                 </Col>
                 <Col className="mb-3">
                   <small>Initial Planning</small>
                   <div>
-                    <strong>50 Post Lab 01</strong>
+                    <strong>{crop?.Initial_Quantity} {crop?.Container_Type} {crop?.Area}</strong>
                   </div>
                 </Col>
               </Row>
@@ -195,7 +219,7 @@ const CropDetail: NextPage = () => {
                 <Col className="mb-3">
                   <small>Current Quantity</small>
                   <div>
-                    <strong>50 Post on Lab 02</strong>
+                    <strong>{crop?.Current_Quantity} {crop?.Container_Type} {crop?.Area}</strong>
                   </div>
                 </Col>
               </Row>
@@ -203,7 +227,7 @@ const CropDetail: NextPage = () => {
                 <Col className="mb-3">
                   <small>Start Date</small>
                   <div>
-                    <strong>24/03/2022</strong>
+                    <strong>{new Date(crop?.Created_Date ?? 0).toLocaleDateString()}</strong>
                   </div>
                 </Col>
               </Row>
@@ -211,7 +235,7 @@ const CropDetail: NextPage = () => {
                 <Col className="mb-3">
                   <small>Remaining days</small>
                   <div>
-                    <strong>7 days</strong>
+                    <strong>{crop?.Remaining_Days} days</strong>
                   </div>
                 </Col>
               </Row>
