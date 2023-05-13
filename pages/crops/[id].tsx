@@ -66,6 +66,7 @@ const CropDetail: NextPage = () => {
   const [moveDest, setMoveDest] = useState("");
   const [moveQty, setMoveQty] = useState(0);
   const [remainingDays, setRemainingDays] = useState(0);
+  const [transitionTime, setTransitionTime] = useState("");
   const [counter, setCounter] = useState(0)
   const routes = useRouter()
   interface ICrop {
@@ -115,7 +116,7 @@ const CropDetail: NextPage = () => {
         Source_Area_Name: moveSource,
         Destination_Area_Name: moveDest,
         Quantity: moveQty,
-        Transition_Time: new Date().toISOString().split("T")[0],
+        Transition_Time: transitionTime,
         Remaining_Days: remainingDays,
       };
       const response = await apiClient.post("/movedArea", payload);
@@ -272,6 +273,22 @@ const CropDetail: NextPage = () => {
       .then((data) => setAllAreas(data));
   }, [selectedCulturePlanID, counter]);
 
+  //handle checkbox
+  const handleCheckbox = async (e: any, taskId: number) => {
+    e.preventDefault()
+    try {
+      await apiClient.put(`/tasks/task/${taskId}`, {
+        Status: 'Completed'
+      }, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      })
+      setCounter(counter => counter + 1)
+    } catch (err) {
+      console.log(err)
+    }
+  }
   return (
     <Layout>
       <Row>
@@ -409,7 +426,7 @@ const CropDetail: NextPage = () => {
                               <tr key={id}>
                                 <td>
                                   <Form>
-                                    <Form.Check type="checkbox" onChange={(e) => handleCheckbox(e, Task_ID)}/>
+                                    <Form.Check type="checkbox" onChange={(e) => handleCheckbox(e, id)} />
                                   </Form>
                                 </td>
                                 <td>
@@ -665,25 +682,16 @@ const CropDetail: NextPage = () => {
             />
           </Form.Group>
           <Form.Group className="mb-3">
-            {/* <Form.Label>{`How many plants do you want to move? (${moveQty})`}</Form.Label> */}
-            <Form.Label>{`Expected cell culture duration? (days)`}</Form.Label>
-            {/* <Form.Range
-              value={moveQty}
-              onChange={(e) => setMoveQty(Number(e.target.value))}
-            /> */}
-            <input
-              type="number"
-              defaultValue={0}
-              onChange={(e) => setMoveQty(Number(e.target.value))}
-              style={{
-                padding: "10px",
-                fontSize: "16px",
-                borderRadius: "5px",
-                border: "1px solid #ccc",
-                outline: "none",
-                width: "100%",
-              }}
+            <Form.Label>Estimated planting time</Form.Label>
+            <Form.Control
+              type="date"
+              onChange={(e) => setTransitionTime(e.target.value)}
             />
+            {isError && (
+              <Form.Text className="text-danger">
+                The planned time field is required
+              </Form.Text>
+            )}
           </Form.Group>
         </Form>
       </ModalContainer>
