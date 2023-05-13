@@ -241,8 +241,13 @@ const CropDetail: NextPage = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!selectedCulturePlanID) return
       try {
-        const response = await apiClient.get("/tasks/allTask");
+        const response = await apiClient.get(`/tasks/allTask?Culture_Plan_ID=${selectedCulturePlanID}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          },
+        });
         const tasks = response.data.result;
         setData(tasks);
       } catch (error) {
@@ -251,7 +256,7 @@ const CropDetail: NextPage = () => {
     };
 
     fetchData();
-  }, [filterCategory, filterPriority, filter]);
+  }, [selectedCulturePlanID]);
 
   useEffect(() => {
     apiClient.get("/areas-with-culture-plan", {
@@ -393,7 +398,7 @@ const CropDetail: NextPage = () => {
                         {data &&
                           data.map(
                             ({
-                              id,
+                              Task_ID: id,
                               Title,
                               Description,
                               Due_Date,
@@ -404,12 +409,12 @@ const CropDetail: NextPage = () => {
                               <tr key={id}>
                                 <td>
                                   <Form>
-                                    <Form.Check type="checkbox" />
+                                    <Form.Check type="checkbox" onChange={(e) => handleCheckbox(e, Task_ID)}/>
                                   </Form>
                                 </td>
                                 <td>
                                   <TableTaskItem
-                                    id={id}
+                                    Task_ID={id}
                                     Title={Title}
                                     Description={Description}
                                     Due_Date={Due_Date}

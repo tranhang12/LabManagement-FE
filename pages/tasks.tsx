@@ -10,7 +10,7 @@ import {
   Table,
 } from "react-bootstrap";
 import { FaEdit, FaPlus } from "react-icons/fa";
-
+import Link from "next/link";
 import ButtonIcon from "../components/ButtonIcon";
 import ModalContainer from "../components/ModalContainer";
 import Panel from "../components/Panel";
@@ -19,6 +19,8 @@ import TableTaskItem from "../components/TableTaskItem";
 import Layout from "../components/Layout";
 import useModal from "../src/hooks/useModal";
 import apiClient from "@/services/apiClient";
+import { selectAuthState } from "../src/store/auth";
+import { useSelector } from "react-redux";
 
 const Tasks: NextPage = () => {
   const resetFields = () => {
@@ -37,14 +39,19 @@ const Tasks: NextPage = () => {
   const [isError, setIsError] = useState(false);
   const [filterCategory, setFilterCategory] = useState("");
   const [filterPriority, setFilterPriority] = useState("");
-  const [filter, setFilter] = useState("");
+  const [filter, setFilter] = useState("Incomplete");
   const [data, setData] = useState<iTableTaskItem | any>([]);
+  const [counter, setCounter] = useState(0)
   const target = useRef(null);
-
+  const { accessToken } = useSelector(selectAuthState);
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await apiClient.get("/tasks/allTask");
+        const response = await apiClient.get(`/tasks/allTask?Status=${filter}&&Priority=${filterPriority}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
         const tasks = response.data.result;
         setData(tasks);
       } catch (error) {
@@ -53,7 +60,23 @@ const Tasks: NextPage = () => {
     };
 
     fetchData();
-  }, [filterCategory, filterPriority, filter]);
+  }, [filterCategory, filterPriority, filter, counter]);
+  //handle checkbox
+  const handleCheckbox = async (e : any, taskId : number) => {
+    e.preventDefault()
+    try {
+      await apiClient.put(`/tasks/task/${taskId}`, {
+        Status: 'Completed'
+      }, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      })
+      setCounter(counter => counter + 1)
+    } catch (err) {
+      console.log(err)
+    }
+  } 
 
   //get user
   type User = {
@@ -103,6 +126,7 @@ const Tasks: NextPage = () => {
                   <th className="w-60">Items</th>
                   <th>Category</th>
                   <th>Assigned to</th>
+                  <th>Culture Plan</th>
                   <th />
                 </tr>
               </thead>
@@ -110,23 +134,25 @@ const Tasks: NextPage = () => {
                 {data &&
                   data.map(
                     ({
-                      id,
+                      Task_ID,
                       Title,
                       Description,
                       Due_Date,
                       Priority,
                       Task_Category,
                       Assigned_To,
+                      BatchID,
+                      Culture_Plan_ID: Culutre_Plan_ID,
                     }: iTableTaskItem) => (
-                      <tr key={id}>
+                      <tr key={Task_ID}>
                         <td>
                           <Form>
-                            <Form.Check type="checkbox" />
+                            <Form.Check type="checkbox" onChange={(e) => handleCheckbox(e, Task_ID)}/>
                           </Form>
                         </td>
                         <td>
                           <TableTaskItem
-                            id={id}
+                            Task_ID={Task_ID}
                             Title={Title}
                             Description={Description}
                             Due_Date={Due_Date}
@@ -140,6 +166,9 @@ const Tasks: NextPage = () => {
                         </td>
                         <td>
                           <span className="text-uppercase">{Assigned_To}</span>
+                        </td>
+                         <td>
+                          <span className="text-uppercase"><Link href={`/crops/${Culutre_Plan_ID}`}>{BatchID}</Link></span>
                         </td>
                         <td>
                           <FaEdit
@@ -181,42 +210,42 @@ const Tasks: NextPage = () => {
               <ListGroupItem
                 className="text-info show-pointer"
                 active={filter === "completed"}
-                onClick={() => setFilter("completed")}
+                onClick={() => setFilter("Completed")}
               >
                 Completed
               </ListGroupItem>
               <ListGroupItem
                 className="text-muted show-pointer"
                 active={filter === "incomplete"}
-                onClick={() => setFilter("incomplete")}
+                onClick={() => setFilter("Incomplete")}
               >
                 Incomplete
               </ListGroupItem>
               <ListGroupItem
                 className="text-danger show-pointer"
                 active={filter === "overdue"}
-                onClick={() => setFilter("overdue")}
+                onClick={() => setFilter("Overdue")}
               >
                 Overdue
               </ListGroupItem>
               <ListGroupItem
                 className="text-secondary show-pointer"
                 active={filter === "today"}
-                onClick={() => setFilter("today")}
+                onClick={() => setFilter("Today")}
               >
                 Today
               </ListGroupItem>
               <ListGroupItem
                 className="show-pointer"
                 active={filter === "week"}
-                onClick={() => setFilter("week")}
+                onClick={() => setFilter("Week")}
               >
                 This Week
               </ListGroupItem>
               <ListGroupItem
                 className="show-pointer"
                 active={filter === "month"}
-                onClick={() => setFilter("month")}
+                onClick={() => setFilter("Month")}
               >
                 This Month
               </ListGroupItem>

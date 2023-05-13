@@ -1,6 +1,6 @@
 module.exports = {
   reactStrictMode: true,
-  swcMinify: true,
+  swcMinify: false,
   env: {
     NEXTAUTH_URL: 'http://localhost:3001',
   },

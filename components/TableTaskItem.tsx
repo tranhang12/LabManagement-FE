@@ -4,17 +4,19 @@ import { Collapse } from "react-bootstrap";
 import { FaChevronDown } from "react-icons/fa";
 
 export interface iTableTaskItem {
-  id: number;
+  Task_ID: number;
   Title: string;
   Description: string;
   Due_Date: string;
   Priority: string;
   Task_Category?: string;
   Assigned_To?: string;
+  BatchID?: string;
+  Culture_Plan_ID?: string;
 }
 
 const TableTaskItem = ({
-  id,
+  Task_ID,
   Title,
   Description,
   Due_Date,
@@ -24,12 +26,12 @@ const TableTaskItem = ({
   return (
     <>
       <div className="mb-3">
-        <Link href={`/tasks/${id}`}>{Title}</Link>
+        <Link href={`/tasks/${Task_ID}`}>{Title}</Link>
         <br />
         <small className="d-flex align-items-center">
         </small>
         <Collapse in={showDetail}>
-          <small id={`task-Title-${id}`}>{Description}</small>
+          <small id={`task-Title-${Task_ID}`}>{Description}</small>
         </Collapse>
       </div>
       <small className="text-muted">

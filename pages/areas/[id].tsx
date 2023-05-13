@@ -169,7 +169,7 @@ const ReservoirDetail: NextPage = () => {
                     <tr key={id}>
                       <td>
                         <TableTaskItem
-                          id={id}
+                          Task_ID={id}
                           item={item}
                           details={details}
                           dueDate={dueDate}
