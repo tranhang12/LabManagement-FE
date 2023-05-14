@@ -57,6 +57,8 @@ const Micropropagation: NextPage = () => {
   interface IMicrop {
     Culture_ID: number;
     Plant_ID: number;
+    Plant_Name: string;
+    Culture_Medium_Name: string;
     Medium_ID: number;
     Duration_Of_Culture: number;
     Duration_Of_Bud_Regeneration: number;
@@ -70,7 +72,7 @@ const Micropropagation: NextPage = () => {
 
   const authState = useSelector(selectAuthState);
   const { accessToken } = authState;
-  const [Data, setData] = useState([]);
+  const [data, setData] = useState([]);
   const fetchData = useCallback(async () => {
     try {
       const response = await apiClient.get("/culture", {
@@ -80,10 +82,11 @@ const Micropropagation: NextPage = () => {
         },
       });
 
-      if (response.data.status) {
+      if (response.status) {
+        // console.log(response.data.data)
         setData(response.data.result);
       } else {
-        console.error("Error fetching current plant: " + response.data.message);
+        console.error("Error fetching current plant: " + response.data);
       }
     } catch (error) {
       console.error("Error fetching current plant: " + error);
@@ -108,9 +111,8 @@ const Micropropagation: NextPage = () => {
   };
 
   const handleDeleteItem = async (item: any) => {
-    // call API to delete item
 
-    const response = await apiClient.delete(`/plant/${item.Plant_ID}`, {
+    const response = await apiClient.delete(`/culture/${item.Culture_ID}`, {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
@@ -132,15 +134,15 @@ const Micropropagation: NextPage = () => {
 
     // Set the default values for the input fields
     setPlant(microp.Plant_ID);
-    setCultureMedium(0);
-    setCulture(0);
-    setBudRegeneration(0);
-    setMultiplyBud(0);
-    setRooting(0);
-    setTemperatureMax(0);
-    setTemperatureMin(0);
-    setLightIntensity("");
-    setLightingTime("");
+    setCultureMedium(microp.Culture_Medium_Name);
+    setCulture(microp.Duration_Of_Culture);
+    setBudRegeneration(microp.Duration_Of_Bud_Regeneration);
+    setMultiplyBud(microp.Duration_Of_Multiply_Bud);
+    setRooting(microp.Duration_Of_Rooting);
+    setTemperatureMax(microp.Temperature_Max);
+    setTemperatureMin(microp.Temperature_Min);
+    setLightIntensity(microp.Light_Intensity);
+    setLightingTime(microp.Lighting_Time);
 
     setIsAdding(false);
     showModal();
@@ -243,7 +245,7 @@ const Micropropagation: NextPage = () => {
   const itemsPerPage = 10;
 
   const { sortedData, requestSort, sortConfig, handleRequestSort } =
-    useSortData([]);
+    useSortData(data);
   const { paginatedData, totalPages, currentPage, handleChangePage } =
     usePagination(sortedData, itemsPerPage);
 
@@ -324,8 +326,8 @@ const Micropropagation: NextPage = () => {
                   <TableCell>
                     {(currentPage - 1) * itemsPerPage + index + 1}
                   </TableCell>
-                  <TableCell>{item.Plant_ID}</TableCell>
-                  <TableCell>{item.Medium}</TableCell>
+                  <TableCell>{item.Plant_Name}</TableCell>
+                  <TableCell>{item.Culture_Medium_Name}</TableCell>
                   <TableCell>{item.Duration_Of_Culture} days</TableCell>
                   <TableCell>
                     {item.Duration_Of_Bud_Regeneration} days

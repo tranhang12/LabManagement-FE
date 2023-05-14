@@ -60,7 +60,7 @@ const Tasks: NextPage = () => {
     };
 
     fetchData();
-  }, [filterCategory, filterPriority, filter, counter]);
+  }, [accessToken, filterCategory, filterPriority, filter, counter]);
   //handle checkbox
   const handleCheckbox = async (e : any, taskId : number) => {
     e.preventDefault()

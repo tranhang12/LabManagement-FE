@@ -94,10 +94,21 @@ const Crops: NextPage = () => {
     Current_Quantity: string;
     Remaining_Days: string;
   }
+  interface IArchive {
+    Culture_Plan_ID: number;
+    Plant_Type: string;
+    Area: string;
+    BatchID: string;
+    Created_Date: string;
+    Quantity: number;
+    Produced_Quantity: string
+  }
+
 
   const authState = useSelector(selectAuthState);
   const { accessToken } = authState;
 
+  // culture plan (crop) list
   const [Data, setData] = useState([]);
   const fetchData = useCallback(async () => {
     try {
@@ -110,6 +121,28 @@ const Crops: NextPage = () => {
 
       if (response.data.status) {
         setData(response.data.result);
+      } else {
+        console.error("Error fetching Crop: " + response.data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching Crop: " + error);
+    }
+  }, [accessToken]);
+
+  //get harvest crops (Archive tab)
+  const [harvestData, setHarvestData] = useState([]);
+  const fetchHarvestData = useCallback(async () => {
+    try {
+      const response = await apiClient.get("/harvestStorage", {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (response.data.status) {
+        console.log(response)
+        setHarvestData(response.data.result);
       } else {
         console.error("Error fetching Crop: " + response.data.message);
       }
@@ -132,7 +165,8 @@ const Crops: NextPage = () => {
   // fetch data
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+    fetchHarvestData();
+  }, [fetchData, fetchHarvestData]);
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<ICrop | null>(null);
@@ -293,12 +327,14 @@ const Crops: NextPage = () => {
   };
 
   const itemsPerPage = 10;
-
+// sort and paging for Crop table
   const { sortedData, requestSort, sortConfig, handleRequestSort } =
     useSortData(Data);
   const { paginatedData, totalPages, currentPage, handleChangePage } =
     usePagination(sortedData, itemsPerPage);
-
+// sort and paging for Archive table
+const { sortedData: sortedData2, requestSort: requestSort2, sortConfig: sortConfig2 } = useSortData(harvestData);
+const { paginatedData: paginatedData2, totalPages: totalPages2, currentPage: currentPage2, handleChangePage: handleChangePage2 } = usePagination(sortedData2, itemsPerPage);
   //css for header
   const StyledTableHead = styled(TableHead)`
     background-color: #358a51;
@@ -472,7 +508,108 @@ const Crops: NextPage = () => {
                 />
               </div>
             </Tab>
-            <Tab eventKey="archives" title="Archives"></Tab>
+            {/* Archives */}
+            <Tab eventKey="archives" title="Archives">
+            <TableContainer component={Paper} className="my-4">
+                <Table>
+                  <StyledTableHead>
+                    <TableRow>
+                      <StyledTableCellWidth>#</StyledTableCellWidth>
+                      <StyledTableCell
+                        onClick={() => handleRequestSort("BatchID")}
+                      >
+                        <TableSortLabel
+                          active={sortConfig.key === "batchID"}
+                          direction={sortConfig.direction}
+                          onClick={() => handleRequestSort("BatchID")}
+                        >
+                          Batch ID
+                        </TableSortLabel>
+                      </StyledTableCell>
+                      <StyledTableCell>
+                        <TableSortLabel
+                          active={sortConfig.key === "Plant_Type"}
+                          direction={sortConfig.direction}
+                          onClick={() => handleRequestSort("Plant_Type")}
+                        >
+                          Crop Variety Name
+                        </TableSortLabel>
+                      </StyledTableCell>
+                      
+                      <StyledTableCell
+                        onClick={() => handleRequestSort("Created_Date")}
+                      >
+                        <TableSortLabel
+                          active={sortConfig.key === "Created_Date"}
+                          direction={sortConfig.direction}
+                          onClick={() => handleRequestSort("Created_Date")}
+                        >
+                          Harvest Date
+                        </TableSortLabel>
+                      </StyledTableCell>
+                      <StyledTableCell
+                        onClick={() => handleRequestSort("Quantity")}
+                      >
+                        
+                        <TableSortLabel
+                          active={sortConfig.key === "Quantity"}
+                          direction={sortConfig.direction}
+                          onClick={() => handleRequestSort("Quantity")}
+                        >
+                          Quantity
+                        </TableSortLabel>
+                      </StyledTableCell>
+                      
+                      <StyledTableCell
+                        onClick={() => handleRequestSort("Source_Area_Name")}
+                      >
+                        
+                        <TableSortLabel
+                          active={sortConfig.key === "Source_Area_Name"}
+                          direction={sortConfig.direction}
+                          onClick={() => handleRequestSort("Source_Area_Name")}
+                        >
+                          Source Area Name
+                        </TableSortLabel>
+                      </StyledTableCell>
+                    </TableRow>
+                  </StyledTableHead>
+                  <TableBody>
+                    {paginatedData2 &&
+                      paginatedData2.map((item, index) => (
+                        <TableRow key={item.ID}>
+                          <TableCell>
+                            
+                            {(currentPage - 1) * itemsPerPage + index + 1}
+                          </TableCell>
+                          <TableCell>{item.BatchID}</TableCell>
+                          <TableCell>
+                            <Link href={`/crops/${item.Culture_Plan_ID}`}>
+                              {item.Plant_Type}
+                            </Link>
+                          </TableCell>
+                          <TableCell>
+                            {new Date(item.Created_Date).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>
+                            {item.Quantity} {item.Container_Type}
+                          </TableCell>
+                          <TableCell>
+                            {item.Source_Area_Name}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              <div className="d-flex justify-content-center mt-4">
+                <Pagination
+                  count={totalPages}
+                  page={currentPage}
+                  onChange={handleChangePage}
+                />
+              </div>
+            </Tab>
           </Tabs>
         </Col>
       </Row>

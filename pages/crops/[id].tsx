@@ -257,7 +257,7 @@ const CropDetail: NextPage = () => {
     };
 
     fetchData();
-  }, [selectedCulturePlanID]);
+  }, [selectedCulturePlanID, counter]);
 
   useEffect(() => {
     apiClient.get("/areas-with-culture-plan", {
