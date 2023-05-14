@@ -22,6 +22,7 @@ import {
   FaCamera,
   FaCut,
   FaExchangeAlt,
+  FaClone,
 } from "react-icons/fa";
 
 import ButtonIcon from "../../components/ButtonIcon";
@@ -36,6 +37,7 @@ import { toast } from 'react-toastify'
 import { useRouter } from "next/router";
 import { selectAuthState } from "../../src/store/auth";
 import { useSelector } from "react-redux";
+import BatchArea, { IBatchArea } from "../../components/BatchArea";
 
 const CropDetail: NextPage = () => {
   const resetFields = () => {
@@ -107,7 +109,7 @@ const CropDetail: NextPage = () => {
           setCrop(res.data.result)
         })
     }
-  }, [selectedCulturePlanID])
+  }, [selectedCulturePlanID, counter])
 
   const handleMoveSubmit = async () => {
     try {
@@ -201,11 +203,37 @@ const CropDetail: NextPage = () => {
       setModalHarvestOpen(false);
     }
   };
-  // Move Modal
-  // const [modalMoveOpen, setModalMoveOpen] = useState(false);
-  // const [moveSource, setMoveSource] = useState("");
-  // const [moveDest, setMoveDest] = useState("");
-  // const [moveQty, setMoveQty] = useState(0);
+
+  // Separate Modal
+  const [modalSeparateOpen, setModalSeparateOpen] = useState(false);
+  const [separateSource, setSeparateSource] = useState("");
+  const [separateQty, setSeparateQty] = useState(0);
+
+  const handleSeparateSubmit = async () => {
+    try {
+      const payload = {
+        Culture_Plan_ID : +(selectedCulturePlanID as string), 
+        New_Current_Quantity: separateQty, 
+        Area_Name: separateSource
+      };
+
+      const response = await apiClient.put("/movedAreaCurrentQuantity", payload);
+
+      if (response.status === 200) {
+        toast.success("Crop separate successfully");
+
+      } else {
+        toast.error("An error occurred while separating the crop")
+      }
+    } catch (error: any) {
+
+      toast.error(error.response?.data?.message || "An error occurred while separating the crop")
+      console.error(error);
+    } finally {
+      setCounter(counter => counter + 1)
+      setModalSeparateOpen(false);
+    }
+  };
 
   // Dump Modal
   const [modalDumpOpen, setModalDumpOpen] = useState(false);
@@ -260,6 +288,9 @@ const CropDetail: NextPage = () => {
   }, [selectedCulturePlanID, counter]);
 
   useEffect(() => {
+    if (!Number.isInteger(Number.parseInt(selectedCulturePlanID as string))) {
+      return;
+    }
     apiClient.get("/areas-with-culture-plan", {
       params: {
         Culture_Plan_ID: selectedCulturePlanID
@@ -271,6 +302,14 @@ const CropDetail: NextPage = () => {
     apiClient.get("/all-areas")
       .then((res) => res.data)
       .then((data) => setAllAreas(data));
+
+      apiClient.get("/movedAreaOfCulturePlan", {
+        params: {
+          Culture_Plan_ID: selectedCulturePlanID
+        }
+      })
+      .then((res) => res.data)
+      .then((data) => setMovedAreaData(data.result));
   }, [selectedCulturePlanID, counter]);
 
   //handle checkbox
@@ -289,6 +328,10 @@ const CropDetail: NextPage = () => {
       console.log(err)
     }
   }
+
+  const [moveAreaData, setMovedAreaData] = useState<IBatchArea[]>([])
+
+
   return (
     <Layout>
       <Row>
@@ -387,7 +430,31 @@ const CropDetail: NextPage = () => {
                     />
                   </div>
                 </Col>
+                <Col className="mb-3">
+                  <div className="d-grid gap-2">
+                    <ButtonIcon
+                      label="Separate tissue"
+                      icon={<FaClone className="me-2" />}
+                      onClick={() => setModalSeparateOpen(true)}
+                      variant="info"
+                      isBlock
+                    />
+                  </div>
+                </Col>
               </Row>
+
+              <Row className="mt-3">
+                {moveAreaData.map(
+                  (item, index) => (
+                    <Col xs={12} sm={12} md={6} lg={4} key={item.Area_Name}>
+                      <BatchArea
+                        {...item}
+                      />
+                    </Col>
+                  )
+                )}
+              </Row>
+
             </Tab>
             <Tab eventKey="notes" title="Tasks &amp; Notes">
               <Row>
@@ -697,7 +764,7 @@ const CropDetail: NextPage = () => {
       </ModalContainer>
 
       <ModalContainer
-        title="Dump rom-24mar"
+        title={`Dump ${crop?.BatchID}`}
         isShow={modalDumpOpen}
         handleCloseModal={() => setModalDumpOpen(false)}
         handleSubmitModal={handleDumpSubmit}
@@ -728,6 +795,34 @@ const CropDetail: NextPage = () => {
               onChange={(e) => setDumpNotes(e.target.value)}
               value={dumpNotes}
               style={{ height: "120px" }}
+            />
+          </Form.Group>
+        </Form>
+      </ModalContainer>
+
+      <ModalContainer
+        title={`Separate ${crop?.BatchID}`}
+        isShow={modalSeparateOpen}
+        handleCloseModal={() => setModalSeparateOpen(false)}
+        handleSubmitModal={handleSeparateSubmit}
+      >
+        <Form>
+          <Form.Group className="mb-3">
+            <Form.Label>Choose area</Form.Label>
+            <Form.Select onChange={(e) => setSeparateSource(e.target.value)}>
+              <option>Please select area</option>
+              {areasWithCulturePlan.map((area) => (
+                <option key={area.Area_Name} value={area.Area_Name}>
+                  {area.Area_Name}
+                </option>
+              ))}
+            </Form.Select>
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>{`New Quantity`}</Form.Label>
+            <Form.Control
+              type="number"
+              onChange={(e) => setSeparateQty(+e.target.value)}
             />
           </Form.Group>
         </Form>
