@@ -165,6 +165,7 @@ const CropDetail: NextPage = () => {
           }
         });
         closeModal();
+        setCounter((counter) => counter + 1);
       } catch (err) {
         setIsError(true);
       }
@@ -285,7 +286,7 @@ const CropDetail: NextPage = () => {
     };
 
     fetchData();
-  }, [selectedCulturePlanID, counter]);
+  }, [selectedCulturePlanID, counter, accessToken]);
 
   useEffect(() => {
     if (!Number.isInteger(Number.parseInt(selectedCulturePlanID as string))) {

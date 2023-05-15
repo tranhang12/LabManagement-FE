@@ -32,6 +32,7 @@ import apiClient from "@/services/apiClient";
 import useModal from "../src/hooks/useModal";
 
 import ConfirmModal from "@/components/ConfirmModal";
+import { toast } from "react-toastify";
 const Users: NextPage = () => {
   const resetFields = () => {
     setUserName("");
@@ -40,6 +41,7 @@ const Users: NextPage = () => {
     setPassword("");
     setEmail("");
     setIsAdmin(false);
+    setIsError(false);
   };
   const { modalOpen, showModal, closeModal } = useModal(resetFields);
   const [userName, setUserName] = useState("");
@@ -48,6 +50,7 @@ const Users: NextPage = () => {
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isError, setIsError] = useState(false);
 
   interface IUser {
     User_ID: number;
@@ -111,7 +114,7 @@ const Users: NextPage = () => {
         },
       }
     );
-
+    toast.success("Delete successfully!");
     // refresh data
     fetchUserData();
     // close modal
@@ -132,7 +135,6 @@ const Users: NextPage = () => {
     setPassword(user.User_Password);
     setEmail(user.email);
     setIsAdmin(user.Is_Admin === 1);
-
     setIsAddingUser(false);
     showModal();
   };
@@ -143,6 +145,10 @@ const Users: NextPage = () => {
       return;
     }
     // Validate user input and call API to update user information
+    if (!userName || !fullName || !phoneNumber || !password || !email) {
+      setIsError(true);
+      return;
+    }
     try {
       const response = await apiClient.put(
         `/users/updateUserInfo/${editingUser?.User_ID}`,
@@ -163,10 +169,10 @@ const Users: NextPage = () => {
       );
 
       if (response.data.status) {
+        toast.success("Update successfully!");
         // Refresh user data
         fetchUserData();
-        console.log(response);
-
+        // console.log(response);
         // Close modal and reset editingUser
         closeModal();
         resetFields();
@@ -187,6 +193,10 @@ const Users: NextPage = () => {
   };
   const handleCreateUser = async () => {
     // Validate user input and call API to create a new user
+    if (!userName || !fullName || !phoneNumber || !password || !email) {
+      setIsError(true);
+      return;
+    }
     try {
       const response = await apiClient.post(
         "/users/createUser",
@@ -209,7 +219,8 @@ const Users: NextPage = () => {
       if (response.data.status) {
         // Refresh user data
         fetchUserData();
-        console.log(response);
+        // console.log(response);
+        toast.success("Add new user successfully!");
 
         // Close modal and reset editingUser
         closeModal();
@@ -372,7 +383,13 @@ const Users: NextPage = () => {
                 placeholder="Enter username"
                 value={userName}
                 onChange={(e) => setUserName(e.target.value)}
+                required
               />
+              {isError && (
+                <Form.Text className="text-danger">
+                  The user name field is required!
+                </Form.Text>
+              )}
             </Form.Group>
             <Form.Group controlId="fullName">
               <Form.Label>Full Name</Form.Label>
@@ -382,6 +399,11 @@ const Users: NextPage = () => {
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
               />
+              {isError && (
+                <Form.Text className="text-danger">
+                  The full name field is required!
+                </Form.Text>
+              )}
             </Form.Group>
             <Form.Group controlId="phoneNumber">
               <Form.Label>Phone Number</Form.Label>
@@ -391,6 +413,11 @@ const Users: NextPage = () => {
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
               />
+              {isError && (
+                <Form.Text className="text-danger">
+                  The phone number field is required!
+                </Form.Text>
+              )}
             </Form.Group>
             <Form.Group controlId="password">
               <Form.Label>Password</Form.Label>
@@ -400,6 +427,11 @@ const Users: NextPage = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
+              {isError && (
+                <Form.Text className="text-danger">
+                  The password field is required!
+                </Form.Text>
+              )}
             </Form.Group>
             <Form.Group controlId="email">
               <Form.Label>Email</Form.Label>
@@ -409,6 +441,11 @@ const Users: NextPage = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
+              {isError && (
+                <Form.Text className="text-danger">
+                  The email field is required!
+                </Form.Text>
+              )}
             </Form.Group>
             <Form.Group controlId="isAdmin">
               <Form.Check

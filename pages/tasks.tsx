@@ -2,10 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import type { NextPage } from "next";
 import {
   Col,
+  Container,
   Form,
   InputGroup,
   ListGroup,
   ListGroupItem,
+  Pagination,
   Row,
   Table,
 } from "react-bootstrap";
@@ -34,6 +36,7 @@ const Tasks: NextPage = () => {
   const [dueDate, setDueDate] = useState("");
   const [priority, setPriority] = useState("");
   const [title, setTitle] = useState("");
+  const [assignedTo, setAssignedTo] = useState("");
   const [desc, setDesc] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [isError, setIsError] = useState(false);
@@ -41,61 +44,96 @@ const Tasks: NextPage = () => {
   const [filterPriority, setFilterPriority] = useState("");
   const [filter, setFilter] = useState("Incomplete");
   const [data, setData] = useState<iTableTaskItem | any>([]);
-  const [counter, setCounter] = useState(0)
+  const [counter, setCounter] = useState(0);
   const target = useRef(null);
   const { accessToken } = useSelector(selectAuthState);
+
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await apiClient.get(`/tasks/allTask?Status=${filter}&&Priority=${filterPriority}`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`
+        const response = await apiClient.get(
+          `/tasks/allTask?Status=${filter}&&Priority=${filterPriority}`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
           }
-        });
+        );
         const tasks = response.data.result;
         setData(tasks);
+        setTotalPages(Math.ceil(tasks.length / limit));
       } catch (error) {
         console.error("Error fetching data:", error);
       }
     };
 
     fetchData();
-  }, [accessToken, filterCategory, filterPriority, filter, counter]);
+  }, [accessToken, filterCategory, filterPriority, filter, counter, limit]);
   //handle checkbox
-  const handleCheckbox = async (e : any, taskId : number) => {
-    e.preventDefault()
+  const handleCheckbox = async (e: any, taskId: number) => {
+    e.preventDefault();
     try {
-      await apiClient.put(`/tasks/task/${taskId}`, {
-        Status: 'Completed'
-      }, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
+      await apiClient.put(
+        `/tasks/task/${taskId}`,
+        {
+          Status: "Completed",
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
         }
-      })
-      setCounter(counter => counter + 1)
+      );
+      setCounter((counter) => counter + 1);
     } catch (err) {
-      console.log(err)
+      console.log(err);
     }
-  } 
+  };
 
   //get user
   type User = {
     User_Name: string;
-    }
-    const [allUsers, setAllUsers] = useState<User[]>([]);
-      //get all users
-      useEffect(() => {
-        apiClient.get("users/getAllUsers")
-        .then((res) => res.data)
-        .then((data) => setAllUsers(data.users));
-      }, []);
+  };
+  const [allUsers, setAllUsers] = useState<User[]>([]);
+  //get all users
+  useEffect(() => {
+    apiClient
+      .get("users/getAllUsers")
+      .then((res) => res.data)
+      .then((data) => setAllUsers(data.users));
+  }, []);
 
-  const addTask = () => {
-    if (!dueDate || !priority || !title) {
+  //add new task
+  const addTask = async () => {
+    if (!dueDate || !priority || !title || !assignedTo) {
       setIsError(true);
     } else {
-      setIsError(false);
-      closeModal();
+      try {
+        const response = await apiClient.post(
+          "/tasks/task",
+          {
+            Task_Category: selectedCategory,
+            Title: title,
+            Description: desc,
+            Priority: priority,
+            Due_Date: dueDate,
+            Assigned_To: assignedTo,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+        setCounter((counter) => counter + 1);
+        closeModal();
+      } catch (err) {
+        setIsError(true);
+      }
     }
   };
 
@@ -132,7 +170,7 @@ const Tasks: NextPage = () => {
               </thead>
               <tbody>
                 {data &&
-                  data.map(
+                  data.slice((page - 1) * limit, page * limit).map(
                     ({
                       Task_ID,
                       Title,
@@ -142,12 +180,15 @@ const Tasks: NextPage = () => {
                       Task_Category,
                       Assigned_To,
                       BatchID,
-                      Culture_Plan_ID: Culutre_Plan_ID,
+                      Culture_Plan_ID: Culture_Plan_ID,
                     }: iTableTaskItem) => (
                       <tr key={Task_ID}>
                         <td>
                           <Form>
-                            <Form.Check type="checkbox" onChange={(e) => handleCheckbox(e, Task_ID)}/>
+                            <Form.Check
+                              type="checkbox"
+                              onChange={(e) => handleCheckbox(e, Task_ID)}
+                            />
                           </Form>
                         </td>
                         <td>
@@ -155,7 +196,7 @@ const Tasks: NextPage = () => {
                             Task_ID={Task_ID}
                             Title={Title}
                             Description={Description}
-                            Due_Date={Due_Date}
+                            Due_Date={new Date(Due_Date).toLocaleDateString()}
                             Priority={Priority}
                           />
                         </td>
@@ -167,8 +208,12 @@ const Tasks: NextPage = () => {
                         <td>
                           <span className="text-uppercase">{Assigned_To}</span>
                         </td>
-                         <td>
-                          <span className="text-uppercase"><Link href={`/crops/${Culutre_Plan_ID}`}>{BatchID}</Link></span>
+                        <td>
+                          <span className="text-uppercase">
+                            <Link href={`/crops/${Culture_Plan_ID}`}>
+                              {BatchID}
+                            </Link>
+                          </span>
                         </td>
                         <td>
                           <FaEdit
@@ -181,6 +226,27 @@ const Tasks: NextPage = () => {
                   )}
               </tbody>
             </Table>
+            <Container className="d-flex justify-content-center">
+              <Pagination>
+                <Pagination.Prev
+                  onClick={() => setPage((page) => Math.max(page - 1, 1))}
+                />
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <Pagination.Item
+                    key={i + 1}
+                    active={i + 1 === page}
+                    onClick={() => setPage(i + 1)}
+                  >
+                    {i + 1}
+                  </Pagination.Item>
+                ))}
+                <Pagination.Next
+                  onClick={() =>
+                    setPage((page) => Math.min(page + 1, totalPages))
+                  }
+                />
+              </Pagination>
+            </Container>
           </>
         </Panel>
         <Col md={3} lg={4}>
@@ -259,91 +325,88 @@ const Tasks: NextPage = () => {
         handleCloseModal={closeModal}
         handleSubmitModal={addTask}
       >
-        <>
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>Due Date</Form.Label>
-              <InputGroup ref={target}>
-                <Form.Control
-                  type="date"
-                  value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
-                />
-              </InputGroup>
-              {isError && (
-                <Form.Text className="text-danger">
-                  The due date field is required
-                </Form.Text>
-              )}
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Is this task urgent?</Form.Label>
-              <Form.Check
-                type="radio"
-                label="Yes"
-                name="priority"
-                onChange={() => setPriority("urgent")}
-              />
-              <Form.Check
-                type="radio"
-                label="No"
-                name="priority"
-                onChange={() => setPriority("normal")}
-              />
-              {isError && (
-                <Form.Text className="text-danger">
-                  The priority field is required
-                </Form.Text>
-              )}
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Task Category</Form.Label>
-              <Form.Select
-                onChange={(e) => setSelectedCategory(e.target.value)}
-              >
-                <option>Please select category</option>
-                <option value="Move">Move</option>
-                <option value="Harvest">Harvest</option>
-                <option value="Dump">Dump</option>
-                <option value="Other">Other</option>
-              </Form.Select>
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Title</Form.Label>
+        <Form>
+          <Form.Group className="mb-3">
+            <Form.Label>Due Date</Form.Label>
+            <InputGroup ref={target}>
               <Form.Control
-                type="text"
-                onChange={(e) => setTitle(e.target.value)}
-                value={title}
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
               />
-              {isError && (
-                <Form.Text className="text-danger">
-                  The title field is required
-                </Form.Text>
-              )}
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Assign to</Form.Label>
-              <Form.Select
-                onChange={(e) => setSelectedCategory(e.target.value)}
-              >
-                {allUsers.map((user) => (
-                <option key={user.User_Name} value={user.User_Name}>
-                  {user.User_Name}
-                </option>
-              ))}
-              </Form.Select>
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Description</Form.Label>
-              <Form.Control
-                as="textarea"
-                onChange={(e) => setDesc(e.target.value)}
-                value={desc}
-                style={{ height: "120px" }}
-              />
-            </Form.Group>
-          </Form>
-        </>
+            </InputGroup>
+            {isError && (
+              <Form.Text className="text-danger">
+                The due date field is required
+              </Form.Text>
+            )}
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Is this task urgent?</Form.Label>
+            <Form.Check
+              type="radio"
+              label="Yes"
+              name="priority"
+              onChange={() => setPriority("urgent")}
+            />
+            <Form.Check
+              type="radio"
+              label="No"
+              name="priority"
+              onChange={() => setPriority("normal")}
+            />
+            {isError && (
+              <Form.Text className="text-danger">
+                The priority field is required
+              </Form.Text>
+            )}
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Task Category</Form.Label>
+            <Form.Select onChange={(e) => setSelectedCategory(e.target.value)}>
+              <option>Please select category</option>
+              <option value="Move">Move</option>
+              <option value="Harvest">Harvest</option>
+              <option value="Dump">Dump</option>
+              <option value="Other">Other</option>
+            </Form.Select>
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Title</Form.Label>
+            <Form.Control
+              type="text"
+              onChange={(e) => setTitle(e.target.value)}
+              value={title}
+            />
+            {isError && (
+              <Form.Text className="text-danger">
+                The title field is required
+              </Form.Text>
+            )}
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Assign to</Form.Label>
+            <Form.Select onChange={(e) => setAssignedTo(e.target.value)}>
+              <>
+                <option value="">Please select assignee</option>
+                {(allUsers || []).map((user) => (
+                  <option key={user.User_Name} value={user.User_Name}>
+                    {user.User_Name}
+                  </option>
+                ))}
+              </>
+            </Form.Select>
+          </Form.Group>
+          <Form.Group className="mb-3">
+            <Form.Label>Description</Form.Label>
+            <Form.Control
+              as="textarea"
+              onChange={(e) => setDesc(e.target.value)}
+              value={desc}
+              style={{ height: "120px" }}
+            />
+          </Form.Group>
+        </Form>
       </ModalContainer>
     </Layout>
   );

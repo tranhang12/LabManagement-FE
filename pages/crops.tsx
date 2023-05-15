@@ -94,15 +94,6 @@ const Crops: NextPage = () => {
     Current_Quantity: string;
     Remaining_Days: string;
   }
-  interface IArchive {
-    Culture_Plan_ID: number;
-    Plant_Type: string;
-    Area: string;
-    BatchID: string;
-    Created_Date: string;
-    Quantity: number;
-    Produced_Quantity: string
-  }
 
 
   const authState = useSelector(selectAuthState);

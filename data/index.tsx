@@ -16,7 +16,7 @@ const dashboardData = [
     icon: <FaGripHorizontal className="me-3" />,
   },
   {
-    name: "Varieties",
+    name: "Culture Plans",
     route: "/crops",
     icon: <FaLeaf className="me-3" />,
   },
