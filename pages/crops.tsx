@@ -142,6 +142,28 @@ const Crops: NextPage = () => {
     }
   }, [accessToken]);
 
+  // get dump data
+  const [dumpData, setDumpData] = useState([]);
+  const fetchDumpData = useCallback(async () => {
+    try {
+      const response = await apiClient.get("/trash", {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (response.data.status) {
+        console.log(response)
+        setDumpData(response.data.result);
+      } else {
+        console.error("Error fetching dump Crop: " + response.data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching dump Crop: " + error);
+    }
+  }, [accessToken]);
+
   type Area = {
     Area_Name: string;
   };
@@ -157,7 +179,8 @@ const Crops: NextPage = () => {
   useEffect(() => {
     fetchData();
     fetchHarvestData();
-  }, [fetchData, fetchHarvestData]);
+    fetchDumpData();
+  }, [fetchData, fetchHarvestData, fetchDumpData]);
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<ICrop | null>(null);
@@ -326,6 +349,10 @@ const Crops: NextPage = () => {
 // sort and paging for Archive table
 const { sortedData: sortedData2, requestSort: requestSort2, sortConfig: sortConfig2 } = useSortData(harvestData);
 const { paginatedData: paginatedData2, totalPages: totalPages2, currentPage: currentPage2, handleChangePage: handleChangePage2 } = usePagination(sortedData2, itemsPerPage);
+//sort and paging for trash table
+const { sortedData: sortedData3, requestSort: requestSort3, sortConfig: sortConfig3 } = useSortData(dumpData);
+const { paginatedData: paginatedData3, totalPages: totalPages3, currentPage: currentPage3, handleChangePage: handleChangePage3 } = usePagination(sortedData3, itemsPerPage);
+
   //css for header
   const StyledTableHead = styled(TableHead)`
     background-color: #358a51;
@@ -499,6 +526,7 @@ const { paginatedData: paginatedData2, totalPages: totalPages2, currentPage: cur
                 />
               </div>
             </Tab>
+
             {/* Archives */}
             <Tab eventKey="archives" title="Archives">
             <TableContainer component={Paper} className="my-4">
@@ -573,12 +601,115 @@ const { paginatedData: paginatedData2, totalPages: totalPages2, currentPage: cur
                             
                             {(currentPage - 1) * itemsPerPage + index + 1}
                           </TableCell>
-                          <TableCell>{item.BatchID}</TableCell>
                           <TableCell>
                             <Link href={`/crops/${item.Culture_Plan_ID}`}>
-                              {item.Plant_Type}
+                              {item.BatchID}
                             </Link>
                           </TableCell>
+                          <TableCell>{item.Plant_Type}</TableCell>
+                          
+                          <TableCell>
+                            {new Date(item.Created_Date).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>
+                            {item.Quantity} {item.Container_Type}
+                          </TableCell>
+                          <TableCell>
+                            {item.Source_Area_Name}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+              <div className="d-flex justify-content-center mt-4">
+                <Pagination
+                  count={totalPages}
+                  page={currentPage}
+                  onChange={handleChangePage}
+                />
+              </div>
+            </Tab>
+
+            {/* Dump */}
+            <Tab eventKey="dump" title="Trash">
+            <TableContainer component={Paper} className="my-4">
+                <Table>
+                  <StyledTableHead>
+                    <TableRow>
+                      <StyledTableCellWidth>#</StyledTableCellWidth>
+                      <StyledTableCell
+                        onClick={() => handleRequestSort("BatchID")}
+                      >
+                        <TableSortLabel
+                          active={sortConfig.key === "batchID"}
+                          direction={sortConfig.direction}
+                          onClick={() => handleRequestSort("BatchID")}
+                        >
+                          Batch ID
+                        </TableSortLabel>
+                      </StyledTableCell>
+                      <StyledTableCell>
+                        <TableSortLabel
+                          active={sortConfig.key === "Plant_Type"}
+                          direction={sortConfig.direction}
+                          onClick={() => handleRequestSort("Plant_Type")}
+                        >
+                          Crop Variety Name
+                        </TableSortLabel>
+                      </StyledTableCell>
+                      
+                      <StyledTableCell
+                        onClick={() => handleRequestSort("Created_Date")}
+                      >
+                        <TableSortLabel
+                          active={sortConfig.key === "Created_Date"}
+                          direction={sortConfig.direction}
+                          onClick={() => handleRequestSort("Created_Date")}
+                        >
+                          Dump Date
+                        </TableSortLabel>
+                      </StyledTableCell>
+                      <StyledTableCell
+                        onClick={() => handleRequestSort("Quantity")}
+                      >
+                        
+                        <TableSortLabel
+                          active={sortConfig.key === "Quantity"}
+                          direction={sortConfig.direction}
+                          onClick={() => handleRequestSort("Quantity")}
+                        >
+                          Quantity
+                        </TableSortLabel>
+                      </StyledTableCell>
+                      
+                      <StyledTableCell
+                        onClick={() => handleRequestSort("Source_Area_Name")}
+                      >
+                        
+                        <TableSortLabel
+                          active={sortConfig.key === "Source_Area_Name"}
+                          direction={sortConfig.direction}
+                          onClick={() => handleRequestSort("Source_Area_Name")}
+                        >
+                          Source Area Name
+                        </TableSortLabel>
+                      </StyledTableCell>
+                    </TableRow>
+                  </StyledTableHead>
+                  <TableBody>
+                    {paginatedData3 &&
+                      paginatedData3.map((item, index) => (
+                        <TableRow key={item.ID}>
+                          <TableCell>
+                            {(currentPage - 1) * itemsPerPage + index + 1}
+                          </TableCell>
+                          <TableCell>
+                            <Link href={`/crops/${item.Culture_Plan_ID}`}>
+                              {item.BatchID}
+                            </Link>
+                          </TableCell>
+                          <TableCell>{item.Plant_Type}</TableCell>
                           <TableCell>
                             {new Date(item.Created_Date).toLocaleDateString()}
                           </TableCell>
@@ -611,9 +742,7 @@ const { paginatedData: paginatedData2, totalPages: totalPages2, currentPage: cur
         handleSubmitModal={isAdding ? handleCreate : handleSave}
       >
         <>
-          {/* <small className="text-muted">
-            Crop Batch is a quantity or consignment of crops done at one time.
-          </small> */}
+          
           <Form className="mt-3">
             <Form.Group className="mb-3">
               <Form.Label>Crop Variety</Form.Label>
@@ -660,19 +789,6 @@ const { paginatedData: paginatedData2, totalPages: totalPages2, currentPage: cur
                     </Form.Text>
                   )}
                 </Col>
-                {/* <Col>
-                <Form.Label>Current Quantity</Form.Label>
-                  <Form.Control
-                    type="number"
-                    value={currentQuantity}
-                    onChange={(e) => setCurrentQuantity(e.target.value)}
-                  />
-                  {isError && (
-                    <Form.Text className="text-danger">
-                      The current quantity field is required
-                    </Form.Text>
-                  )}
-                </Col> */}
               </Row>
             </Form.Group>
             <Form.Group className="mb-3">
