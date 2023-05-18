@@ -624,7 +624,7 @@ const { paginatedData: paginatedData3, totalPages: totalPages3, currentPage: cur
               </TableContainer>
               <div className="d-flex justify-content-center mt-4">
                 <Pagination
-                  count={totalPages}
+                  count={totalPages2}
                   page={currentPage}
                   onChange={handleChangePage}
                 />
@@ -726,7 +726,7 @@ const { paginatedData: paginatedData3, totalPages: totalPages3, currentPage: cur
               </TableContainer>
               <div className="d-flex justify-content-center mt-4">
                 <Pagination
-                  count={totalPages}
+                  count={totalPages3}
                   page={currentPage}
                   onChange={handleChangePage}
                 />

@@ -21,7 +21,7 @@ const Areas: NextPage = () => {
     setAreaUnit("");
     setAreaType("");
     setAreaLocations("");
-  setQuantity(0);
+    setQuantity(0);
   };
 
   const { modalOpen, showModal, closeModal } = useModal(resetFields);
@@ -43,8 +43,8 @@ const Areas: NextPage = () => {
     Area_Unit: string;
     Area_Type: string;
     Area_Locations: string;
-  Quantity: number;
-  };
+    Quantity: number;
+  }
 
   //fetch data
   const fetchData = useCallback(async () => {
@@ -57,6 +57,7 @@ const Areas: NextPage = () => {
       });
       if (response.status) {
         setAreaData(response.data);
+        console.log(response.data)
       } else {
         console.error("Error fetching current area: " + response.data?.message);
       }
@@ -69,7 +70,7 @@ const Areas: NextPage = () => {
     fetchData();
   }, [fetchData]);
 
-  // EDIT 
+  // EDIT
   const [editing, setEditing] = useState<IArea | null>(null);
 
   const handleEdit = (area: IArea) => {
@@ -81,7 +82,7 @@ const Areas: NextPage = () => {
     setAreaUnit(area.Area_Unit);
     setAreaType(area.Area_Type);
     setAreaLocations(area.Area_Locations);
-  setQuantity(area.Quantity);
+    setQuantity(area.Quantity);
 
     setIsAdding(false);
     showModal();
@@ -99,10 +100,10 @@ const Areas: NextPage = () => {
         {
           Area_Name: areaName,
           Area_Size: areaSize,
-    Area_Unit: areaUnit,
-    Area_Type: areaType,
-    Area_Locations: areaLocations,
-  Quantity: quantity,
+          Area_Unit: areaUnit,
+          Area_Type: areaType,
+          Area_Locations: areaLocations,
+          Quantity: quantity,
         },
         {
           headers: {
@@ -129,24 +130,23 @@ const Areas: NextPage = () => {
     }
   };
 
-  // ADD 
+  // ADD
   const [isAdding, setIsAdding] = useState(false);
   const handleAdd = () => {
     setIsAdding(true);
     showModal();
   };
   const handleCreate = async () => {
-    // Validate input and call API to create a new 
+    // Validate input and call API to create a new
     try {
       const response = await apiClient.post(
         "/area",
         {
           Area_Name: areaName,
           Area_Size: areaSize,
-    Area_Unit: areaUnit,
-    Area_Type: areaType,
-    Area_Locations: areaLocations,
-  Quantity: quantity,
+          Area_Unit: areaUnit,
+          Area_Type: areaType,
+          Area_Locations: areaLocations,
         },
         {
           headers: {
@@ -191,33 +191,33 @@ const Areas: NextPage = () => {
         </Col>
       </Row>
       <Row className="mt-3">
-        {areaData.map(
-          (item, index) => (
-            <Col xs={12} sm={12} md={6} lg={4} key={item.Area_ID}>
-              <PanelArea
-                id={item.Area_ID}
-                name={item.Area_Name}
-                type={item.Area_Type}
-                size={item.Area_Size}
-                unit={item.Area_Unit}
-                location={item.Area_Locations}
-                quantity={item.Quantity}
-                edit={true}
-                onClick={() => handleEdit(item as IArea)}
-              />
-            </Col>
-          )
-        )}
+        {areaData.map((item, index) => (
+          <Col xs={12} sm={12} md={6} lg={4} key={item.Area_ID}>
+            <PanelArea
+              id={item.Area_ID}
+              name={item.Area_Name}
+              type={item.Area_Type}
+              size={item.Area_Size}
+              unit={item.Area_Unit}
+              location={item.Area_Locations}
+              quantity={item.Quantity}
+              edit={true}
+              onClick={() => handleEdit(item as IArea)}
+            />
+          </Col>
+        ))}
       </Row>
       <ModalContainer
-         title={isAdding ? "Add Area" : "Edit Area"}
-         isShow={modalOpen}
-         handleCloseModal={closeModal}
-         handleSubmitModal={isAdding ? handleCreate : handleSave}
+        title={isAdding ? "Add Area" : "Edit Area"}
+        isShow={modalOpen}
+        handleCloseModal={closeModal}
+        handleSubmitModal={isAdding ? handleCreate : handleSave}
       >
         <>
           <small className="text-muted">
-          An area is a space where you grow your plants. It could be a lab, nursery, greenhouse, or anything that describes the different physical locations in your facility.
+            An area is a space where you grow your plants. It could be a lab,
+            nursery, greenhouse, or anything that describes the different
+            physical locations in your facility.
           </small>
           <Form className="mt-3">
             <Form.Group className="mb-3">
@@ -250,7 +250,7 @@ const Areas: NextPage = () => {
                 </Col>
                 <Col>
                   <Form.Select
-                  value={areaUnit}
+                    value={areaUnit}
                     onChange={(e) => setAreaUnit(e.target.value)}
                   >
                     <option value="m2">m2</option>
@@ -263,9 +263,16 @@ const Areas: NextPage = () => {
               <Row>
                 <Col xs={6}>
                   <Form.Label>Type</Form.Label>
-                  <Form.Select value={areaType} onChange={(e) => setAreaType(e.target.value)}>
-                    <option value="Tissue culture room">Tissue culture room</option>
-                    <option value="Tissue culture laboratory">Tissue culture laboratory</option>
+                  <Form.Select
+                    value={areaType}
+                    onChange={(e) => setAreaType(e.target.value)}
+                  >
+                    <option value="Tissue culture room">
+                      Tissue culture room
+                    </option>
+                    <option value="Tissue culture laboratory">
+                      Tissue culture laboratory
+                    </option>
                   </Form.Select>
                 </Col>
                 <Col xs={6}>
